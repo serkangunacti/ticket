@@ -56,6 +56,12 @@ export default function TicketLandingPage() {
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(5,199,242,0.16),_transparent_22%),linear-gradient(180deg,#061426_0%,#0d2342_34%,#f8fbff_34%,#f8fbff_100%)] text-white">
       <section className="grain-overlay relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_top,_rgba(143,233,255,0.18),_transparent_55%)]" />
+          <div className="absolute -left-24 top-28 h-72 w-72 rounded-full bg-[#05c7f2]/14 blur-3xl" />
+          <div className="absolute right-[-4rem] top-40 h-96 w-96 rounded-full bg-[#4b82ff]/10 blur-3xl" />
+        </div>
+
         <div className="mx-auto flex min-h-[100svh] w-full max-w-7xl flex-col px-6 pb-16 pt-6 lg:px-10">
           <header className="flex items-center justify-between py-4">
             <div>
@@ -74,13 +80,13 @@ export default function TicketLandingPage() {
             </Link>
           </header>
 
-          <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="max-w-3xl">
+          <div className="relative flex flex-1 flex-col justify-center py-10">
+            <div className="max-w-4xl">
               <SectionLabel>Uptexx Destek Merkezi</SectionLabel>
-              <h1 className="font-heading mt-6 text-5xl leading-[0.95] font-semibold tracking-tight text-white md:text-7xl">
-                Müşteri maillerini takip etmek yerine süreci tek panelden yönetin.
+              <h1 className="font-heading mt-6 max-w-4xl text-5xl leading-[0.94] font-semibold tracking-tight text-white md:text-7xl">
+                Müşteri maillerini tek tek takip etmeyin. Destek akışını tek panelde toplayın.
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-[#d7e9fb] md:text-xl">
+              <p className="mt-6 max-w-3xl text-lg leading-8 text-[#d7e9fb] md:text-xl">
                 destek@uptexx.com adresine gelen talepler otomatik ticket&apos;a
                 dönüşür. Tenant filtresi, aylık export ve aynı mail zinciri içinde
                 devam eden yanıt akışı ile destek operasyonu sadeleşir.
@@ -101,7 +107,7 @@ export default function TicketLandingPage() {
                 </a>
               </div>
 
-              <div className="mt-10 grid max-w-2xl gap-4 border-t border-white/10 pt-6 text-sm text-[#d7e9fb] sm:grid-cols-3">
+              <div className="mt-10 grid max-w-3xl gap-4 border-t border-white/10 pt-6 text-sm text-[#d7e9fb] sm:grid-cols-3">
                 <div>
                   <p className="font-heading text-2xl font-semibold text-white">Mail-first</p>
                   <p className="mt-2 leading-7">Portal zorunluluğu olmadan müşteriden ticket toplama.</p>
@@ -117,63 +123,130 @@ export default function TicketLandingPage() {
               </div>
             </div>
 
-            <div className="relative">
-              <div className="absolute -left-8 top-8 hidden h-40 w-40 rounded-full bg-[#05c7f2]/25 blur-3xl lg:block" />
-              <div className="absolute right-0 top-1/3 hidden h-52 w-52 rounded-full bg-[#4b82ff]/15 blur-3xl lg:block" />
-              <Surface className="relative overflow-hidden border-white/10 bg-white/[0.07] p-0 text-white backdrop-blur-md">
-                <div className="soft-grid p-8">
-                  <div className="flex items-center justify-between border-b border-white/10 pb-6">
-                    <div>
-                      <p className="text-sm uppercase tracking-[0.2em] text-[#8fe9ff]">
-                        Live overview
+            <div className="mt-14 overflow-hidden rounded-[34px] border border-white/10 bg-white/[0.05] backdrop-blur-md">
+              <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
+                <div className="border-b border-white/10 p-8 lg:border-b-0 lg:border-r">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8fe9ff]">
+                    Süreç Akışı
+                  </p>
+                  <h2 className="font-heading mt-4 max-w-md text-3xl font-semibold tracking-tight text-white">
+                    Mailden ticket&apos;a, ticket&apos;tan çözüme uzanan tek akış.
+                  </h2>
+                  <p className="mt-4 max-w-lg text-sm leading-7 text-[#d8e8f8]">
+                    İlk ekranın amacı tam olarak bu: müşteri tarafında ekstra eğitim
+                    gerektirmeden, iç operasyonu düzenli ve raporlanabilir hale getirmek.
+                  </p>
+                </div>
+
+                <div className="grid gap-0 md:grid-cols-3">
+                  {[
+                    {
+                      label: "01",
+                      title: "Destek maili gelir",
+                      body: "Gönderen domain tenant ile eşleşir ve kayıt doğrudan açılır.",
+                    },
+                    {
+                      label: "02",
+                      title: "Ticket süreçte ilerler",
+                      body: "Durum, öncelik, iç not ve çözüm adımları tek ekranda yönetilir.",
+                    },
+                    {
+                      label: "03",
+                      title: "Yanıt ve rapor çıkar",
+                      body: "Aynı mail zinciri korunur, dönem sonunda export alınır.",
+                    },
+                  ].map((item, index) => (
+                    <div
+                      key={item.label}
+                      className={`p-8 ${index < 2 ? "border-b border-white/10 md:border-b-0 md:border-r" : ""}`}
+                    >
+                      <p className="font-heading text-3xl font-semibold text-[#8fe9ff]">
+                        {item.label}
                       </p>
-                      <h2 className="mt-2 font-heading text-3xl font-semibold">
-                        Operasyon görünümü
-                      </h2>
+                      <h3 className="mt-6 font-heading text-2xl font-semibold text-white">
+                        {item.title}
+                      </h3>
+                      <p className="mt-4 text-sm leading-7 text-[#dcecff]">
+                        {item.body}
+                      </p>
                     </div>
-                    <span className="rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-semibold text-emerald-100">
-                      Aktif akış
-                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-4 text-sm text-[#d7e9fb] lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="rounded-[28px] border border-white/10 bg-white/[0.04] px-6 py-5">
+                <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
+                      Operasyon özeti
+                    </p>
+                    <p className="mt-2 font-heading text-2xl font-semibold text-white">
+                      Mailden ticket görünümü
+                    </p>
                   </div>
+                  <span className="rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-semibold text-emerald-100">
+                    Aktif akış
+                  </span>
+                </div>
 
-                  <div className="mt-8 grid gap-4">
-                    <div className="grid gap-3 rounded-[26px] border border-white/10 bg-white/[0.04] p-5">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-[#8fe9ff]">Yeni gelen</span>
-                        <span className="text-white">[#UPX-1048]</span>
-                      </div>
-                      <p className="font-heading text-2xl font-semibold text-white">
-                        Mailden ticket açıldı
-                      </p>
-                      <p className="text-sm leading-7 text-[#dcecff]">
-                        konu: Giriş ekranında hata alıyoruz
-                      </p>
-                      <div className="grid gap-2 text-sm text-[#c0d8ee] sm:grid-cols-2">
-                        <span>tenant: Acme Teknoloji</span>
-                        <span>durum: open</span>
-                        <span>öncelik: high</span>
-                        <span>kanal: email</span>
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  {[
+                    "Müşteri maili tenant domainine göre eşlenir",
+                    "Aynı thread içinde gelen cevaplar ticket geçmişine eklenir",
+                    "Tek panelden iç not, yanıt ve export alınır",
+                  ].map((item) => (
+                    <div key={item} className="rounded-[22px] border border-white/10 bg-white/[0.04] px-4 py-4">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[#8fe9ff]" />
+                        <p className="leading-7 text-[#ecf6ff]">{item}</p>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
 
-                    <div className="space-y-3">
-                      {[
-                        "Müşteri maili tenant domainine göre eşlenir",
-                        "Aynı thread içinde gelen cevaplar ticket geçmişine eklenir",
-                        "Tek panelden iç not, yanıt ve export alınır",
-                      ].map((item) => (
-                        <div
-                          key={item}
-                          className="flex items-start gap-3 rounded-3xl border border-white/10 bg-white/[0.04] p-4"
-                        >
-                          <CheckCircle2 className="mt-1 h-5 w-5 text-[#8fe9ff]" />
-                          <p className="text-sm leading-7 text-[#ecf6ff]">{item}</p>
-                        </div>
-                      ))}
+              <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.02)_100%)] px-6 py-5">
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
+                      Canlı kayıt örneği
+                    </p>
+                    <p className="mt-2 font-heading text-2xl font-semibold text-white">
+                      [#UPX-1048]
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+                    high
+                  </span>
+                </div>
+
+                <div className="mt-5 space-y-3 text-sm text-[#dcecff]">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.18em] text-[#9dcff1]">Konu</p>
+                    <p className="mt-1 text-base text-white">Giriş ekranında hata alıyoruz</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#9dcff1]">tenant</p>
+                      <p className="mt-2 text-white">Acme Teknoloji</p>
+                    </div>
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#9dcff1]">durum</p>
+                      <p className="mt-2 text-white">open</p>
+                    </div>
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#9dcff1]">kanal</p>
+                      <p className="mt-2 text-white">email</p>
+                    </div>
+                    <div className="rounded-[20px] border border-white/10 bg-white/[0.04] px-4 py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-[#9dcff1]">son işlem</p>
+                      <p className="mt-2 text-white">ilk müdahale bekliyor</p>
                     </div>
                   </div>
                 </div>
-              </Surface>
+              </div>
             </div>
           </div>
         </div>
