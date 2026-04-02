@@ -13,12 +13,12 @@ export default async function LoginPage(props: {
   const error = searchParams.error;
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#061426_0%,#0d2342_44%,#f8fbff_44%,#f8fbff_100%)] px-6 py-10">
-      <div className="mx-auto grid min-h-[calc(100svh-5rem)] w-full max-w-6xl gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-        <div className="flex flex-col justify-between rounded-[36px] border border-white/10 bg-white/6 p-8 text-white backdrop-blur-sm">
+    <main className="min-h-screen bg-[linear-gradient(180deg,#061426_0%,#0d2342_100%)] px-6 py-10">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 lg:min-h-[calc(100svh-8rem)] lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <div className="flex flex-col gap-12 rounded-[36px] border border-white/10 bg-white/6 p-8 text-white backdrop-blur-sm lg:p-10">
           <div>
             <SectionLabel>Yönetim Girişi</SectionLabel>
-            <h1 className="font-heading mt-6 text-5xl font-semibold tracking-tight">
+            <h1 className="font-heading mt-6 max-w-xl text-4xl font-semibold tracking-tight lg:text-[4rem] lg:leading-[0.95]">
               Uptexx destek operasyonuna giriş yapın.
             </h1>
             <p className="mt-6 max-w-lg text-base leading-8 text-[#d7e9fb]">
