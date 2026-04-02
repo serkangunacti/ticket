@@ -42,11 +42,11 @@ export function Surface({
 
 export function StatusBadge({ value }: { value: string }) {
   const colorMap: Record<string, string> = {
-    new: "bg-cyan-100 text-cyan-800",
-    open: "bg-blue-100 text-blue-800",
-    waiting_customer: "bg-indigo-100 text-indigo-800",
-    resolved: "bg-emerald-100 text-emerald-800",
-    closed: "bg-slate-200 text-slate-700",
+    new: "bg-[#dff4fb] text-[#0f5a73]",
+    open: "bg-[#e6eef9] text-[#274a75]",
+    waiting_customer: "bg-[#ece8fb] text-[#55449c]",
+    resolved: "bg-[#e5f4ea] text-[#2b6c45]",
+    closed: "bg-[#eceff3] text-[#526070]",
   };
 
   return (
@@ -63,10 +63,10 @@ export function StatusBadge({ value }: { value: string }) {
 
 export function PriorityBadge({ value }: { value: string }) {
   const colorMap: Record<string, string> = {
-    low: "bg-slate-100 text-slate-700",
-    normal: "bg-cyan-100 text-cyan-800",
-    high: "bg-sky-100 text-sky-800",
-    critical: "bg-rose-100 text-rose-800",
+    low: "bg-[#eceff3] text-[#526070]",
+    normal: "bg-[#dff4fb] text-[#0f5a73]",
+    high: "bg-[#e8edf7] text-[#3f5680]",
+    critical: "bg-[#fae7ea] text-[#9c3d4c]",
   };
 
   return (
@@ -91,14 +91,14 @@ export function MetricTile({
   hint?: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[color:var(--line)] bg-[color:var(--panel)] p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#4e6a88]">
+    <div className="rounded-[24px] border border-[rgba(15,23,42,0.08)] bg-[#f7fafc] p-5">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#64748b]">
         {label}
       </p>
-      <p className="mt-3 text-3xl font-semibold tracking-tight text-[#08192f]">
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-[#18212c]">
         {value}
       </p>
-      {hint ? <p className="mt-2 text-sm text-[#5a6d85]">{hint}</p> : null}
+      {hint ? <p className="mt-2 text-sm text-[#64748b]">{hint}</p> : null}
     </div>
   );
 }
