@@ -2,9 +2,20 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export function SectionLabel({ children }: { children: ReactNode }) {
+export function SectionLabel({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <span className="inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#8fe9ff]">
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border border-white/12 bg-white/8 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#8fe9ff]",
+        className,
+      )}
+    >
       {children}
     </span>
   );

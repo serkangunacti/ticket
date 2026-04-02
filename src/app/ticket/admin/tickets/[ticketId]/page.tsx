@@ -17,9 +17,9 @@ export default async function TicketDetailPage(props: {
   if (!ticket) {
     return (
       <main className="mx-auto w-full max-w-4xl px-6 py-12 lg:px-10">
-        <Surface>
-          <p className="text-lg font-semibold text-[#08192f]">Ticket bulunamadı.</p>
-          <Link href="/ticket/admin" className="mt-4 inline-flex text-sm font-semibold text-[#0d5f86]">
+        <Surface className="border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+          <p className="text-lg font-semibold text-[#2a2e36]">Ticket bulunamadı.</p>
+          <Link href="/ticket/admin" className="mt-4 inline-flex text-sm font-semibold text-[#7d6546]">
             Listeye dön
           </Link>
         </Surface>
@@ -33,14 +33,14 @@ export default async function TicketDetailPage(props: {
         <div>
           <Link
             href="/ticket/admin"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#0d5f86]"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#7d6546]"
           >
             <ArrowLeft className="h-4 w-4" /> Ticket listesine dön
           </Link>
-          <h1 className="font-heading mt-4 text-5xl font-semibold tracking-tight text-[#08192f]">
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-[#2a2e36]">
             {ticket.ticketCode}
           </h1>
-          <p className="mt-3 max-w-3xl text-base leading-8 text-[#5a6d85]">
+          <p className="mt-3 max-w-3xl text-base leading-8 text-[#6b655d]">
             {ticket.subject}
           </p>
         </div>
@@ -51,42 +51,47 @@ export default async function TicketDetailPage(props: {
       </div>
 
       <section className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
-        <Surface className="space-y-6 bg-white">
+        <Surface className="space-y-6 border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
           <div>
-            <SectionLabel>Ticket özeti</SectionLabel>
-            <div className="mt-6 space-y-3 text-sm leading-7 text-[#324a66]">
+            <SectionLabel className="border-[#d7cdbd] bg-[#efe5d7] text-[#7d6546]">
+              Ticket özeti
+            </SectionLabel>
+            <div className="mt-6 space-y-3 text-sm leading-7 text-[#4e5562]">
               <p>
-                <span className="font-semibold text-[#08192f]">Tenant:</span>{" "}
+                <span className="font-semibold text-[#2a2e36]">Tenant:</span>{" "}
                 {ticket.tenantName}
               </p>
               <p>
-                <span className="font-semibold text-[#08192f]">Domainler:</span>{" "}
+                <span className="font-semibold text-[#2a2e36]">Domainler:</span>{" "}
                 {ticket.tenantDomains.join(", ") || "-"}
               </p>
               <p>
-                <span className="font-semibold text-[#08192f]">Müşteri:</span>{" "}
+                <span className="font-semibold text-[#2a2e36]">Müşteri:</span>{" "}
                 {ticket.customerName ?? "İsimsiz kayıt"} ({ticket.customerEmail})
               </p>
               <p>
-                <span className="font-semibold text-[#08192f]">Geliş zamanı:</span>{" "}
+                <span className="font-semibold text-[#2a2e36]">Geliş zamanı:</span>{" "}
                 {formatDateTime(ticket.firstReceivedAt)}
               </p>
               <p>
-                <span className="font-semibold text-[#08192f]">İlk müdahale:</span>{" "}
+                <span className="font-semibold text-[#2a2e36]">İlk müdahale:</span>{" "}
                 {formatDateTime(ticket.firstResponseAt)}
               </p>
               <p>
-                <span className="font-semibold text-[#08192f]">Çözüm zamanı:</span>{" "}
+                <span className="font-semibold text-[#2a2e36]">Çözüm zamanı:</span>{" "}
                 {formatDateTime(ticket.resolvedAt)}
               </p>
             </div>
           </div>
 
-          <form action={updateTicketAction} className="space-y-4 border-t border-[color:var(--line)] pt-6">
+          <form
+            action={updateTicketAction}
+            className="space-y-4 border-t border-[rgba(42,46,54,0.08)] pt-6"
+          >
             <input type="hidden" name="ticketId" value={ticket.id} />
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#324a66]">
+                <label className="mb-2 block text-sm font-semibold text-[#4e5562]">
                   Durum
                 </label>
                 <select name="status" defaultValue={ticket.status}>
@@ -98,7 +103,7 @@ export default async function TicketDetailPage(props: {
                 </select>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[#324a66]">
+                <label className="mb-2 block text-sm font-semibold text-[#4e5562]">
                   Öncelik
                 </label>
                 <select name="priority" defaultValue={ticket.priority}>
@@ -111,7 +116,7 @@ export default async function TicketDetailPage(props: {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[#324a66]">
+              <label className="mb-2 block text-sm font-semibold text-[#4e5562]">
                 Çözüm notu
               </label>
               <textarea
@@ -121,15 +126,18 @@ export default async function TicketDetailPage(props: {
                 placeholder="Yapılan işlem, kök neden, kalıcı çözüm"
               />
             </div>
-            <button className="w-full rounded-full bg-[#08192f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#0d2342]">
+            <button className="w-full rounded-full bg-[#2f3a49] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#24303e]">
               Ticket güncelle
             </button>
           </form>
 
-          <form action={addTicketMessageAction} className="space-y-4 border-t border-[color:var(--line)] pt-6">
+          <form
+            action={addTicketMessageAction}
+            className="space-y-4 border-t border-[rgba(42,46,54,0.08)] pt-6"
+          >
             <input type="hidden" name="ticketId" value={ticket.id} />
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[#324a66]">
+              <label className="mb-2 block text-sm font-semibold text-[#4e5562]">
                 Ticket mesajı
               </label>
               <textarea
@@ -142,14 +150,14 @@ export default async function TicketDetailPage(props: {
               <button
                 name="direction"
                 value="outbound"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#05c7f2] px-5 py-3 text-sm font-semibold text-[#061426] transition hover:bg-[#7ee9ff]"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8dc7d6] px-5 py-3 text-sm font-semibold text-[#102235] transition hover:bg-[#a7d7e3]"
               >
                 <SendHorizonal className="h-4 w-4" /> Müşteriye mail gönder
               </button>
               <button
                 name="direction"
                 value="internal"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--line)] px-5 py-3 text-sm font-semibold text-[#08192f] transition hover:bg-[#eef5fb]"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-5 py-3 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]"
               >
                 <MessageSquareQuote className="h-4 w-4" /> İç not ekle
               </button>
@@ -157,12 +165,12 @@ export default async function TicketDetailPage(props: {
           </form>
         </Surface>
 
-        <Surface className="bg-white p-0">
-          <div className="border-b border-[color:var(--line)] px-6 py-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#0d5f86]">
+        <Surface className="border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] p-0 shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+          <div className="border-b border-[rgba(42,46,54,0.08)] px-6 py-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#8a6d4b]">
               Ticket geçmişi
             </p>
-            <h2 className="font-heading mt-2 text-3xl font-semibold tracking-tight">
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[#2a2e36]">
               Yazışma akışı
             </h2>
           </div>
@@ -173,33 +181,33 @@ export default async function TicketDetailPage(props: {
                 key={message.id}
                 className={`rounded-[24px] border p-5 ${
                   message.direction === "internal"
-                    ? "border-cyan-200 bg-cyan-50"
+                    ? "border-[#d9cfbf] bg-[#f1e7da]"
                     : message.authorType === "admin"
-                      ? "border-blue-100 bg-[#f4f9ff]"
-                      : "border-[color:var(--line)] bg-[#f7fbff]"
+                      ? "border-[#d8e2e8] bg-[#f4f1eb]"
+                      : "border-[rgba(42,46,54,0.08)] bg-[#f8f4ee]"
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0d5f86]">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
                       {message.direction === "internal"
                         ? "İç not"
                         : message.authorType === "admin"
                           ? "Admin yanıtı"
                           : "Müşteri maili"}
                     </p>
-                    <p className="mt-2 text-xs text-[#5a6d85]">
+                    <p className="mt-2 text-xs text-[#6b655d]">
                       {formatDateTime(message.createdAt)}
                     </p>
                   </div>
                   {message.subject ? (
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-[#5a6d85]">
+                    <span className="rounded-full bg-[#fffaf2] px-3 py-1 text-xs font-medium text-[#6b655d]">
                       {message.subject}
                     </span>
                   ) : null}
                 </div>
 
-                <p className="mt-4 whitespace-pre-wrap text-sm leading-8 text-[#1f2f45]">
+                <p className="mt-4 whitespace-pre-wrap text-sm leading-8 text-[#37404e]">
                   {message.bodyText}
                 </p>
 
@@ -208,7 +216,7 @@ export default async function TicketDetailPage(props: {
                     {message.attachments.map((attachment) => (
                       <span
                         key={attachment.id}
-                        className="rounded-full border border-[color:var(--line)] bg-white px-3 py-1 text-xs font-medium text-[#5a6d85]"
+                        className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1 text-xs font-medium text-[#6b655d]"
                       >
                         {attachment.fileName}
                       </span>

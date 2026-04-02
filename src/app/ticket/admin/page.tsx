@@ -10,9 +10,9 @@ import { formatDateTime, formatDurationMinutes } from "@/lib/utils";
 import { createTenantAction } from "./actions";
 
 const primaryButtonClass =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#08192f] px-4 text-sm font-semibold text-white transition hover:bg-[#0d2342]";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2f3a49] px-4 text-sm font-semibold text-white transition hover:bg-[#24303e]";
 const secondaryButtonClass =
-  "inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[color:var(--line)] bg-white px-4 text-sm font-semibold text-[#08192f] transition hover:bg-[#f4f9ff]";
+  "inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] px-4 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#efe5d7]";
 
 function getFilters(
   searchParams: Record<string, string | string[] | undefined>,
@@ -51,13 +51,13 @@ export default async function AdminDashboard(props: {
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
       <section className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0d5f86]">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
             Ticket yönetimi
           </p>
-          <h1 className="font-heading mt-2 text-4xl font-semibold tracking-tight text-[#08192f]">
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#2a2e36]">
             Destek operasyonu
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-[#5a6d85]">
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[#6b655d]">
             Gelen mailleri izleyin, tenant bazlı filtreleyin ve müşterilere aylık
             rapor hazırlayın.
           </p>
@@ -86,15 +86,15 @@ export default async function AdminDashboard(props: {
         />
       </section>
 
-      <Surface className="bg-white">
+      <Surface className="border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
         <div className="flex flex-col gap-6">
           <div className="flex items-center gap-3">
-            <Filter className="h-5 w-5 text-[#0d2342]" />
+            <Filter className="h-5 w-5 text-[#7d6546]" />
             <div>
-              <h2 className="font-heading text-2xl font-semibold tracking-tight text-[#08192f]">
+              <h2 className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
                 Filtreler
               </h2>
-              <p className="mt-1 text-sm text-[#5a6d85]">
+              <p className="mt-1 text-sm text-[#6b655d]">
                 Listeyi tenant, durum, öncelik ve tarih aralığına göre daraltın.
               </p>
             </div>
@@ -139,25 +139,25 @@ export default async function AdminDashboard(props: {
       </Surface>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.38fr)_minmax(320px,0.62fr)]">
-        <Surface className="min-w-0 overflow-hidden bg-white p-0">
-          <div className="flex flex-col gap-4 border-b border-[color:var(--line)] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <Surface className="min-w-0 overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] p-0 shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+          <div className="flex flex-col gap-4 border-b border-[rgba(42,46,54,0.08)] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0d5f86]">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
                 Ticket listesi
               </p>
-              <h2 className="font-heading mt-1 text-3xl font-semibold tracking-tight text-[#08192f]">
+              <h2 className="mt-1 text-3xl font-semibold tracking-tight text-[#2a2e36]">
                 Filtrelenmiş görünüm
               </h2>
             </div>
-            <div className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#eef5fb] px-3 py-2 text-sm font-semibold text-[#4f627a]">
-              <MailOpen className="h-4 w-4 text-[#0d2342]" />
+            <div className="inline-flex w-fit items-center gap-2 rounded-2xl bg-[#efe5d7] px-3 py-2 text-sm font-semibold text-[#6b655d]">
+              <MailOpen className="h-4 w-4 text-[#7d6546]" />
               {tickets.length} kayıt
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="min-w-full text-left">
-              <thead className="bg-[#f7fbff] text-xs uppercase tracking-[0.18em] text-[#60748f]">
+              <thead className="bg-[#f2eadf] text-xs uppercase tracking-[0.18em] text-[#7a746c]">
                 <tr>
                   <th className="px-6 py-4">Ticket</th>
                   <th className="px-6 py-4">Müşteri</th>
@@ -179,38 +179,41 @@ export default async function AdminDashboard(props: {
                     : null;
 
                   return (
-                    <tr key={ticket.id} className="border-t border-[color:var(--line)] transition hover:bg-[#f7fbff]">
+                    <tr
+                      key={ticket.id}
+                      className="border-t border-[rgba(42,46,54,0.08)] transition hover:bg-[#f6efe6]"
+                    >
                       <td className="px-6 py-5">
                         <Link href={`/ticket/admin/tickets/${ticket.id}`} className="group block">
-                          <p className="font-semibold text-[#08192f] transition group-hover:text-[#0d5f86]">
+                          <p className="font-semibold text-[#2a2e36] transition group-hover:text-[#7d6546]">
                             {ticket.ticketCode}
                           </p>
-                          <p className="mt-1 max-w-sm text-sm leading-7 text-[#4f627a]">
+                          <p className="mt-1 max-w-sm text-sm leading-7 text-[#5f6774]">
                             {ticket.subject}
                           </p>
                         </Link>
                       </td>
-                      <td className="px-6 py-5 text-sm text-[#324a66]">
+                      <td className="px-6 py-5 text-sm text-[#3f4652]">
                         <p className="font-medium">{ticket.customerName ?? "İsimsiz kayıt"}</p>
-                        <p className="mt-1 text-[#5a6d85]">{ticket.customerEmail}</p>
+                        <p className="mt-1 text-[#6b655d]">{ticket.customerEmail}</p>
                       </td>
-                      <td className="px-6 py-5 text-sm text-[#324a66]">{ticket.tenantName}</td>
+                      <td className="px-6 py-5 text-sm text-[#3f4652]">{ticket.tenantName}</td>
                       <td className="px-6 py-5">
                         <StatusBadge value={ticket.status} />
                       </td>
                       <td className="px-6 py-5">
                         <PriorityBadge value={ticket.priority} />
                       </td>
-                      <td className="px-6 py-5 text-sm text-[#324a66]">
+                      <td className="px-6 py-5 text-sm text-[#3f4652]">
                         {formatDurationMinutes(firstResponseMinutes)}
                       </td>
-                      <td className="px-6 py-5 text-sm text-[#5a6d85]">
+                      <td className="px-6 py-5 text-sm text-[#6b655d]">
                         {formatDateTime(ticket.firstReceivedAt)}
                       </td>
                       <td className="px-6 py-5 text-right">
                         <Link
                           href={`/ticket/admin/tickets/${ticket.id}`}
-                          className="inline-flex h-10 items-center justify-center rounded-xl border border-[color:var(--line)] bg-white px-4 text-sm font-semibold text-[#08192f] transition hover:bg-[#eef5fb]"
+                          className="inline-flex h-10 items-center justify-center rounded-xl border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-4 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]"
                         >
                           Düzenle
                         </Link>
@@ -222,7 +225,7 @@ export default async function AdminDashboard(props: {
             </table>
 
             {!tickets.length ? (
-              <div className="px-6 py-16 text-center text-[#5a6d85]">
+              <div className="px-6 py-16 text-center text-[#6b655d]">
                 Seçili filtreler için ticket bulunamadı.
               </div>
             ) : null}
@@ -230,14 +233,14 @@ export default async function AdminDashboard(props: {
         </Surface>
 
         <div className="min-w-0 space-y-6">
-          <Surface className="overflow-hidden bg-white">
+          <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
             <div className="flex items-center gap-3">
-              <Plus className="h-5 w-5 text-[#0d2342]" />
+              <Plus className="h-5 w-5 text-[#7d6546]" />
               <div>
-                <h2 className="font-heading text-2xl font-semibold tracking-tight text-[#08192f]">
+                <h2 className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
                   Yeni tenant
                 </h2>
-                <p className="mt-1 text-sm text-[#5a6d85]">
+                <p className="mt-1 text-sm text-[#6b655d]">
                   Yeni müşteri şirketi ve domain eşlemesi ekleyin.
                 </p>
               </div>
@@ -261,18 +264,18 @@ export default async function AdminDashboard(props: {
             </form>
           </Surface>
 
-          <Surface className="overflow-hidden bg-white">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#0d5f86]">
+          <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
               Tenant listesi
             </p>
             <div className="mt-5 space-y-3">
               {tenants.map((tenant) => (
                 <div
                   key={tenant.id}
-                  className="min-w-0 rounded-2xl border border-[color:var(--line)] bg-[#f7fbff] px-4 py-4"
+                  className="min-w-0 rounded-2xl border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-4 py-4"
                 >
-                  <p className="break-words font-semibold text-[#08192f]">{tenant.name}</p>
-                  <p className="mt-1 break-all text-sm leading-7 text-[#5a6d85]">
+                  <p className="break-words font-semibold text-[#2a2e36]">{tenant.name}</p>
+                  <p className="mt-1 break-all text-sm leading-7 text-[#6b655d]">
                     {tenant.domains.join(", ") || "Henüz domain tanımlı değil"}
                   </p>
                 </div>
