@@ -9,6 +9,8 @@ export type TicketPriority = "low" | "normal" | "high" | "critical";
 
 export type Direction = "inbound" | "outbound" | "internal";
 
+export type SupportRole = "owner" | "manager" | "agent";
+
 export type TenantRecord = {
   id: string;
   name: string;
@@ -24,7 +26,9 @@ export type SupportAgentRecord = {
   id: string;
   name: string;
   email: string;
+  role: SupportRole;
   isActive: boolean;
+  invitePending: boolean;
   createdAt: Date;
   deactivatedAt: Date | null;
 };

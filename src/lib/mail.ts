@@ -242,3 +242,11 @@ export async function sendTicketReply(input: {
 
   return { delivered: true, mode: "microsoft" as const };
 }
+
+export async function sendSystemMail(input: {
+  to: string;
+  subject: string;
+  bodyText: string;
+}) {
+  return sendTicketReply(input);
+}

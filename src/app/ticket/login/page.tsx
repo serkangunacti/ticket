@@ -48,8 +48,8 @@ export default async function LoginPage(props: {
               E-posta ve şifre ile oturum açın
             </h2>
             <p className="mt-4 text-base leading-8 text-[#5a6d85]">
-              Local kurulumda `.env.local` içine `ADMIN_EMAIL` ve
-              `ADMIN_PASSWORD` değerlerini tanımladıktan sonra giriş yapabilirsiniz.
+              Davet alan ekip üyeleri kendi şifrelerini ilk giriş bağlantısı üzerinden
+              belirleyebilir. Yetkili hesaplar doğrudan e-posta ve şifre ile giriş yapar.
             </p>
           </div>
 
@@ -57,9 +57,8 @@ export default async function LoginPage(props: {
             <div className="mt-8 rounded-[24px] border border-cyan-200 bg-cyan-50 p-5 text-cyan-950">
               <p className="font-semibold">Admin hesabı henüz tanımlı değil.</p>
               <p className="mt-2 text-sm leading-7">
-                Başlamak için `.env.local` içinde `ADMIN_EMAIL` ve `ADMIN_PASSWORD`
-                değerlerini ekleyin. Örnek yapı için `.env.example` dosyasını
-                kullanabilirsiniz.
+                Başlangıç sahibi hesabını oluşturmak için ortam değişkenlerinde
+                `ADMIN_EMAIL` ve `ADMIN_PASSWORD` değerlerini tanımlayın.
               </p>
             </div>
           ) : null}

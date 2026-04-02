@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 
 import { hash, compare } from "bcryptjs";
 import {
@@ -16,7 +16,7 @@ import {
 
 import { ensureDatabaseReady, getDb } from "@/lib/db";
 import { env, hasAdminCredentials, hasDatabase } from "@/lib/env";
-import { readInboxMessages, sendTicketReply } from "@/lib/mail";
+import { readInboxMessages, sendSystemMail, sendTicketReply } from "@/lib/mail";
 import { loadMockStore, saveMockStore } from "@/lib/mock-store";
 import { buildExcelWorkbook, buildPdfBuffer, calculateMetrics } from "@/lib/reports";
 import {
@@ -37,6 +37,7 @@ import type {
   CustomerRecord,
   InboundMail,
   SupportAgentRecord,
+  SupportRole,
   TenantRecord,
   TicketDetail,
   TicketFilters,
@@ -48,6 +49,37 @@ import { createTicketCode, getEmailDomain, slugify } from "@/lib/utils";
 
 function now() {
   return new Date();
+}
+
+function createInviteToken() {
+  return randomBytes(24).toString("hex");
+}
+
+async function sendSupportInvite(input: {
+  to: string;
+  name: string;
+  role: SupportRole;
+  inviteBaseUrl: string;
+  token: string;
+}) {
+  const baseUrl = input.inviteBaseUrl.replace(/\/$/, "");
+  const activationUrl = `${baseUrl}/ticket/activate?token=${input.token}`;
+
+  await sendSystemMail({
+    to: input.to,
+    subject: "Uptexx Ticket panel daveti",
+    bodyText: [
+      `Merhaba ${input.name},`,
+      "",
+      "Uptexx Ticket paneline davet edildiniz.",
+      `Rolünüz: ${input.role}`,
+      "",
+      "İlk girişiniz için aşağıdaki bağlantıyı açıp kendi şifrenizi belirleyin:",
+      activationUrl,
+      "",
+      "Bağlantı 7 gün boyunca geçerlidir.",
+    ].join("\n"),
+  });
 }
 
 function getUnassignedTenant(store: Awaited<ReturnType<typeof loadMockStore>>) {
@@ -108,13 +140,27 @@ async function ensureDefaultSupportAgent() {
         id: randomUUID(),
         name: "Uptexx Admin",
         email: env.ADMIN_EMAIL!,
+        role: "owner",
         isActive: true,
+        invitePending: false,
         createdAt: now(),
         deactivatedAt: null,
       };
       store.supportAgents.push(agent);
-      await saveMockStore(store);
+    } else {
+      agent.role = "owner";
+      agent.isActive = true;
+      agent.invitePending = false;
     }
+    if (
+      !store.tickets.some((ticket) => ticket.assigneeId === agent.id) &&
+      store.tickets[0] &&
+      !store.tickets[0].assigneeId
+    ) {
+      store.tickets[0].assigneeId = agent.id;
+      store.tickets[0].assigneeName = agent.name;
+    }
+    await saveMockStore(store);
     return agent;
   }
 
@@ -129,13 +175,45 @@ async function ensureDefaultSupportAgent() {
     .where(eq(supportAgents.email, env.ADMIN_EMAIL!))
     .limit(1);
 
-  if (existing[0]) return existing[0];
-
   const createdAt = now();
+
+  if (existing[0]) {
+    const passwordHash =
+      existing[0].passwordHash ?? (await hash(env.ADMIN_PASSWORD!, 10));
+    await db
+      .update(supportAgents)
+      .set({
+        role: "owner",
+        isActive: true,
+        passwordHash,
+        inviteToken: null,
+        inviteExpiresAt: null,
+        invitedAt: existing[0].invitedAt ?? createdAt,
+        updatedAt: createdAt,
+      })
+      .where(eq(supportAgents.id, existing[0].id));
+
+    return {
+      ...existing[0],
+      role: "owner",
+      isActive: true,
+      passwordHash,
+      inviteToken: null,
+      inviteExpiresAt: null,
+      invitedAt: existing[0].invitedAt ?? createdAt,
+      updatedAt: createdAt,
+    };
+  }
+
   const agent = {
     id: randomUUID(),
     name: "Uptexx Admin",
     email: env.ADMIN_EMAIL!,
+    role: "owner" as const,
+    passwordHash: await hash(env.ADMIN_PASSWORD!, 10),
+    inviteToken: null,
+    inviteExpiresAt: null,
+    invitedAt: createdAt,
     isActive: true,
     createdAt,
     deactivatedAt: null,
@@ -149,10 +227,24 @@ async function ensureDefaultSupportAgent() {
 export async function verifyAdminLogin(email: string, password: string) {
   if (!hasAdminCredentials) return null;
 
+  await ensureDefaultSupportAgent();
+
   if (!hasDatabase) {
+    const store = await loadMockStore();
+    const agent = store.supportAgents.find(
+      (item) => item.email === email && item.isActive,
+    );
+    if (!agent) return null;
+
     if (email === env.ADMIN_EMAIL && password === env.ADMIN_PASSWORD) {
-      return { email, name: "Uptexx Admin" };
+      return {
+        userId: agent.id,
+        email: agent.email,
+        name: agent.name,
+        role: agent.role,
+      };
     }
+
     return null;
   }
 
@@ -161,21 +253,24 @@ export async function verifyAdminLogin(email: string, password: string) {
   const db = getDb();
   if (!db) return null;
 
-  await ensureDbAdminUser();
-
   const result = await db
     .select()
-    .from(adminUsers)
-    .where(eq(adminUsers.email, email))
+    .from(supportAgents)
+    .where(eq(supportAgents.email, email))
     .limit(1);
 
-  const admin = result[0];
-  if (!admin) return null;
+  const agent = result[0];
+  if (!agent || !agent.isActive || !agent.passwordHash) return null;
 
-  const valid = await compare(password, admin.passwordHash);
+  const valid = await compare(password, agent.passwordHash);
   if (!valid) return null;
 
-  return { email: admin.email, name: admin.name };
+  return {
+    userId: agent.id,
+    email: agent.email,
+    name: agent.name,
+    role: agent.role,
+  };
 }
 
 export async function recordAudit(input: {
@@ -329,6 +424,11 @@ export async function setTenantActiveState(input: {
     if (!tenant) return null;
     tenant.isActive = input.isActive;
     tenant.deactivatedAt = input.isActive ? null : now();
+    for (const ticket of store.tickets) {
+      if (ticket.tenantId === tenant.id) {
+        ticket.tenantIsActive = input.isActive;
+      }
+    }
     await saveMockStore(store);
     await recordAudit({
       adminEmail: input.adminEmail,
@@ -365,6 +465,89 @@ export async function setTenantActiveState(input: {
   return allTenants.find((item) => item.id === input.tenantId) ?? null;
 }
 
+export async function updateTenant(input: {
+  tenantId: string;
+  name: string;
+  supportAddress: string;
+  domains: string[];
+  isActive: boolean;
+  adminEmail: string;
+}) {
+  const nextName = input.name.trim();
+  const nextSupportAddress = input.supportAddress.trim();
+  const nextDomains = input.domains.map((domain) => domain.toLowerCase());
+
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    const tenant = store.tenants.find((item) => item.id === input.tenantId);
+    if (!tenant) return null;
+    tenant.name = nextName;
+    tenant.slug = slugify(nextName);
+    tenant.supportAddress = nextSupportAddress;
+    tenant.domains = nextDomains;
+    tenant.isActive = input.isActive;
+    tenant.deactivatedAt = input.isActive ? null : now();
+    for (const customer of store.customers) {
+      if (customer.tenantId === tenant.id) {
+        customer.companyName = nextName;
+      }
+    }
+    for (const ticket of store.tickets) {
+      if (ticket.tenantId === tenant.id) {
+        ticket.tenantName = nextName;
+        ticket.tenantDomains = nextDomains;
+        ticket.tenantIsActive = input.isActive;
+      }
+    }
+    await saveMockStore(store);
+    return tenant;
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return null;
+
+  await db
+    .update(tenants)
+    .set({
+      name: nextName,
+      slug: slugify(nextName),
+      supportAddress: nextSupportAddress,
+      isActive: input.isActive,
+      deactivatedAt: input.isActive ? null : now(),
+      updatedAt: now(),
+    })
+    .where(eq(tenants.id, input.tenantId));
+
+  await db.delete(tenantDomains).where(eq(tenantDomains.tenantId, input.tenantId));
+  if (nextDomains.length) {
+    await db.insert(tenantDomains).values(
+      nextDomains.map((domain) => ({
+        id: randomUUID(),
+        tenantId: input.tenantId,
+        domain,
+        createdAt: now(),
+      })),
+    );
+  }
+
+  await recordAudit({
+    adminEmail: input.adminEmail,
+    action: "tenant.update",
+    entityType: "tenant",
+    entityId: input.tenantId,
+    summary: `Updated tenant ${nextName}`,
+  });
+
+  const allTenants = await listTenants();
+  return allTenants.find((item) => item.id === input.tenantId) ?? null;
+}
+
+export async function getTenant(tenantId: string) {
+  const allTenants = await listTenants();
+  return allTenants.find((item) => item.id === tenantId) ?? null;
+}
+
 export async function listSupportAgents(): Promise<SupportAgentRecord[]> {
   await ensureDefaultSupportAgent();
 
@@ -382,7 +565,9 @@ export async function listSupportAgents(): Promise<SupportAgentRecord[]> {
     id: agent.id,
     name: agent.name,
     email: agent.email,
+    role: agent.role,
     isActive: agent.isActive,
+    invitePending: Boolean(agent.inviteToken && !agent.passwordHash),
     createdAt: agent.createdAt,
     deactivatedAt: agent.deactivatedAt,
   }));
@@ -391,14 +576,20 @@ export async function listSupportAgents(): Promise<SupportAgentRecord[]> {
 export async function createSupportAgent(input: {
   name: string;
   email: string;
+  role: SupportRole;
+  inviteBaseUrl: string;
   adminEmail: string;
 }) {
   const createdAt = now();
+  const inviteToken = createInviteToken();
+  const inviteExpiresAt = new Date(createdAt.getTime() + 1000 * 60 * 60 * 24 * 7);
   const agent: SupportAgentRecord = {
     id: randomUUID(),
     name: input.name.trim(),
     email: input.email.trim().toLowerCase(),
+    role: input.role,
     isActive: true,
+    invitePending: true,
     createdAt,
     deactivatedAt: null,
   };
@@ -407,6 +598,13 @@ export async function createSupportAgent(input: {
     const store = await loadMockStore();
     store.supportAgents.push(agent);
     await saveMockStore(store);
+    await sendSupportInvite({
+      to: agent.email,
+      name: agent.name,
+      role: agent.role,
+      inviteBaseUrl: input.inviteBaseUrl,
+      token: inviteToken,
+    });
     await recordAudit({
       adminEmail: input.adminEmail,
       action: "agent.create",
@@ -425,10 +623,23 @@ export async function createSupportAgent(input: {
     id: agent.id,
     name: agent.name,
     email: agent.email,
+    role: input.role,
+    passwordHash: null,
+    inviteToken,
+    inviteExpiresAt,
+    invitedAt: createdAt,
     isActive: true,
     createdAt,
     deactivatedAt: null,
     updatedAt: createdAt,
+  });
+
+  await sendSupportInvite({
+    to: agent.email,
+    name: agent.name,
+    role: agent.role,
+    inviteBaseUrl: input.inviteBaseUrl,
+    token: inviteToken,
   });
 
   await recordAudit({
@@ -487,6 +698,193 @@ export async function setSupportAgentActiveState(input: {
 
   const agents = await listSupportAgents();
   return agents.find((item) => item.id === input.agentId) ?? null;
+}
+
+export async function updateSupportAgent(input: {
+  agentId: string;
+  name: string;
+  role: SupportRole;
+  isActive: boolean;
+  adminEmail: string;
+}) {
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    const agent = store.supportAgents.find((item) => item.id === input.agentId);
+    if (!agent) return null;
+    agent.name = input.name.trim();
+    agent.role = input.role;
+    agent.isActive = input.isActive;
+    agent.deactivatedAt = input.isActive ? null : now();
+    for (const ticket of store.tickets) {
+      if (ticket.assigneeId === agent.id) {
+        ticket.assigneeName = agent.name;
+      }
+    }
+    await saveMockStore(store);
+    return agent;
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return null;
+
+  await db
+    .update(supportAgents)
+    .set({
+      name: input.name.trim(),
+      role: input.role,
+      isActive: input.isActive,
+      deactivatedAt: input.isActive ? null : now(),
+      updatedAt: now(),
+    })
+    .where(eq(supportAgents.id, input.agentId));
+
+  await recordAudit({
+    adminEmail: input.adminEmail,
+    action: "agent.update",
+    entityType: "support_agent",
+    entityId: input.agentId,
+    summary: `Updated support agent ${input.agentId}`,
+  });
+
+  const agents = await listSupportAgents();
+  return agents.find((item) => item.id === input.agentId) ?? null;
+}
+
+export async function getSupportAgent(agentId: string) {
+  await ensureDefaultSupportAgent();
+
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    return store.supportAgents.find((item) => item.id === agentId) ?? null;
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return null;
+
+  const rows = await db
+    .select()
+    .from(supportAgents)
+    .where(eq(supportAgents.id, agentId))
+    .limit(1);
+
+  const agent = rows[0];
+  if (!agent) return null;
+
+  return {
+    id: agent.id,
+    name: agent.name,
+    email: agent.email,
+    role: agent.role,
+    isActive: agent.isActive,
+    invitePending: Boolean(agent.inviteToken && !agent.passwordHash),
+    createdAt: agent.createdAt,
+    deactivatedAt: agent.deactivatedAt,
+  } satisfies SupportAgentRecord;
+}
+
+export async function getSupportAgentByInviteToken(token: string) {
+  if (!token) return null;
+
+  await ensureDefaultSupportAgent();
+
+  if (!hasDatabase) {
+    return null;
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return null;
+
+  const rows = await db
+    .select()
+    .from(supportAgents)
+    .where(eq(supportAgents.inviteToken, token))
+    .limit(1);
+
+  const agent = rows[0];
+  if (!agent) return null;
+  if (!agent.inviteExpiresAt || agent.inviteExpiresAt.getTime() < now().getTime()) {
+    return null;
+  }
+
+  return agent;
+}
+
+export async function activateSupportAgent(input: {
+  token: string;
+  password: string;
+}) {
+  const agent = await getSupportAgentByInviteToken(input.token);
+  if (!agent) return null;
+
+  const passwordHash = await hash(input.password, 10);
+
+  const db = getDb();
+  if (!db) return null;
+
+  await db
+    .update(supportAgents)
+    .set({
+      passwordHash,
+      inviteToken: null,
+      inviteExpiresAt: null,
+      invitedAt: agent.invitedAt ?? now(),
+      updatedAt: now(),
+    })
+    .where(eq(supportAgents.id, agent.id));
+
+  return {
+    userId: agent.id,
+    email: agent.email,
+    name: agent.name,
+    role: agent.role,
+  };
+}
+
+export async function changeSupportAgentPassword(input: {
+  agentId: string;
+  currentPassword: string;
+  nextPassword: string;
+}) {
+  if (!hasDatabase) {
+    if (
+      input.agentId &&
+      env.ADMIN_EMAIL &&
+      input.currentPassword === env.ADMIN_PASSWORD &&
+      env.ADMIN_PASSWORD
+    ) {
+      return { success: true };
+    }
+    return { success: false };
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return { success: false };
+
+  const rows = await db
+    .select()
+    .from(supportAgents)
+    .where(eq(supportAgents.id, input.agentId))
+    .limit(1);
+
+  const agent = rows[0];
+  if (!agent?.passwordHash) return { success: false };
+
+  const valid = await compare(input.currentPassword, agent.passwordHash);
+  if (!valid) return { success: false };
+
+  await db
+    .update(supportAgents)
+    .set({
+      passwordHash: await hash(input.nextPassword, 10),
+      updatedAt: now(),
+    })
+    .where(eq(supportAgents.id, input.agentId));
+
+  return { success: true };
 }
 
 function applyFiltersToMockTickets(filters: TicketFilters) {

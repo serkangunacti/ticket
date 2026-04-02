@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Download, Filter, MailOpen, Plus } from "lucide-react";
 
 import { MetricTile, PriorityBadge, StatusBadge, Surface } from "@/components/ticket-ui";
-import { getActiveLabel } from "@/lib/labels";
+import { requireAdminSession } from "@/lib/auth";
+import { getActiveLabel, getRoleLabel } from "@/lib/labels";
 import { calculateMetrics } from "@/lib/reports";
 import { listSupportAgents, listTenants, listTickets } from "@/lib/data";
 import type { TicketFilters } from "@/lib/types";
@@ -51,6 +52,7 @@ export default async function AdminDashboard(props: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const searchParams = (await props.searchParams) ?? {};
+  const session = await requireAdminSession();
   const filters = getFilters(searchParams);
   const [tenants, tickets, agents] = await Promise.all([
     listTenants(),
@@ -58,6 +60,8 @@ export default async function AdminDashboard(props: {
     listSupportAgents(),
   ]);
   const metrics = calculateMetrics(tickets);
+  const canManageTenants = session.role === "owner" || session.role === "manager";
+  const canManageTeam = session.role === "owner";
 
   return (
     <main className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 px-6 py-8 lg:px-10">
@@ -253,36 +257,38 @@ export default async function AdminDashboard(props: {
 
       <section className="grid gap-6 xl:grid-cols-2">
         <div className="min-w-0 space-y-6">
-          <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
-            <div className="flex items-center gap-3">
-              <Plus className="h-5 w-5 text-[#7d6546]" />
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
-                  Yeni tenant
-                </h2>
-                <p className="mt-1 text-sm text-[#6b655d]">
-                  Yeni müşteri şirketi ve domain eşlemesi ekleyin.
-                </p>
+          {canManageTenants ? (
+            <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+              <div className="flex items-center gap-3">
+                <Plus className="h-5 w-5 text-[#7d6546]" />
+                <div>
+                  <h2 className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
+                    Yeni tenant
+                  </h2>
+                  <p className="mt-1 text-sm text-[#6b655d]">
+                    Yeni müşteri şirketi ve domain eşlemesi ekleyin.
+                  </p>
+                </div>
               </div>
-            </div>
 
-            <form action={createTenantAction} className="mt-6 grid gap-4">
-              <input name="name" placeholder="Müşteri şirket adı" required />
-              <input
-                name="supportAddress"
-                placeholder="destek@uptexx.com"
-                defaultValue="destek@uptexx.com"
-                required
-              />
-              <textarea
-                name="domains"
-                rows={3}
-                placeholder="acme.com.tr, acmelojistik.com"
-                className="resize-none"
-              />
-              <button className={`w-full ${primaryButtonClass}`}>Tenant oluştur</button>
-            </form>
-          </Surface>
+              <form action={createTenantAction} className="mt-6 grid gap-4">
+                <input name="name" placeholder="Müşteri şirket adı" required />
+                <input
+                  name="supportAddress"
+                  placeholder="destek@uptexx.com"
+                  defaultValue="destek@uptexx.com"
+                  required
+                />
+                <textarea
+                  name="domains"
+                  rows={3}
+                  placeholder="acme.com.tr, acmelojistik.com"
+                  className="resize-none"
+                />
+                <button className={`w-full ${primaryButtonClass}`}>Tenant oluştur</button>
+              </form>
+            </Surface>
+          ) : null}
 
           <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
@@ -301,17 +307,27 @@ export default async function AdminDashboard(props: {
                         {getActiveLabel(tenant.isActive)}
                       </p>
                     </div>
-                    <form action={toggleTenantStateAction}>
-                      <input type="hidden" name="tenantId" value={tenant.id} />
-                      <input
-                        type="hidden"
-                        name="isActive"
-                        value={tenant.isActive ? "false" : "true"}
-                      />
-                      <button className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1.5 text-xs font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]">
-                        {tenant.isActive ? "Pasife çek" : "Aktif et"}
-                      </button>
-                    </form>
+                    {canManageTenants ? (
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/ticket/admin/tenants/${tenant.id}`}
+                          className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1.5 text-xs font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]"
+                        >
+                          Düzenle
+                        </Link>
+                        <form action={toggleTenantStateAction}>
+                          <input type="hidden" name="tenantId" value={tenant.id} />
+                          <input
+                            type="hidden"
+                            name="isActive"
+                            value={tenant.isActive ? "false" : "true"}
+                          />
+                          <button className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1.5 text-xs font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]">
+                            {tenant.isActive ? "Pasife çek" : "Aktif et"}
+                          </button>
+                        </form>
+                      </div>
+                    ) : null}
                   </div>
                   <p className="mt-1 break-all text-sm leading-7 text-[#6b655d]">
                     {tenant.domains.join(", ") || "Henüz domain tanımlı değil"}
@@ -336,11 +352,18 @@ export default async function AdminDashboard(props: {
               </div>
             </div>
 
-            <form action={createSupportAgentAction} className="mt-6 grid gap-4">
-              <input name="name" placeholder="Ad soyad" required />
-              <input name="email" type="email" placeholder="ekip@uptexx.com" required />
-              <button className={`w-full ${primaryButtonClass}`}>Ekip üyesi ekle</button>
-            </form>
+            {canManageTeam ? (
+              <form action={createSupportAgentAction} className="mt-6 grid gap-4">
+                <input name="name" placeholder="Ad soyad" required />
+                <input name="email" type="email" placeholder="ekip@uptexx.com" required />
+                <select name="role" defaultValue="agent">
+                  <option value="agent">Destek Uzmanı</option>
+                  <option value="manager">Yönetici</option>
+                  <option value="owner">Sahip</option>
+                </select>
+                <button className={`w-full ${primaryButtonClass}`}>Ekip üyesi ekle</button>
+              </form>
+            ) : null}
 
             <div className="mt-5 space-y-3">
               {agents.map((agent) => (
@@ -352,21 +375,33 @@ export default async function AdminDashboard(props: {
                     <div className="min-w-0">
                       <p className="break-words font-semibold text-[#2a2e36]">{agent.name}</p>
                       <p className="mt-1 break-all text-sm text-[#6b655d]">{agent.email}</p>
-                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a6d4b]">
-                        {getActiveLabel(agent.isActive)}
-                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a6d4b]">
+                        <span>{getRoleLabel(agent.role)}</span>
+                        <span>{getActiveLabel(agent.isActive)}</span>
+                        {agent.invitePending ? <span>Davet bekliyor</span> : null}
+                      </div>
                     </div>
-                    <form action={toggleSupportAgentStateAction}>
-                      <input type="hidden" name="agentId" value={agent.id} />
-                      <input
-                        type="hidden"
-                        name="isActive"
-                        value={agent.isActive ? "false" : "true"}
-                      />
-                      <button className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1.5 text-xs font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]">
-                        {agent.isActive ? "Pasife çek" : "Aktif et"}
-                      </button>
-                    </form>
+                    {canManageTeam ? (
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/ticket/admin/team/${agent.id}`}
+                          className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1.5 text-xs font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]"
+                        >
+                          Düzenle
+                        </Link>
+                        <form action={toggleSupportAgentStateAction}>
+                          <input type="hidden" name="agentId" value={agent.id} />
+                          <input
+                            type="hidden"
+                            name="isActive"
+                            value={agent.isActive ? "false" : "true"}
+                          />
+                          <button className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1.5 text-xs font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]">
+                            {agent.isActive ? "Pasife çek" : "Aktif et"}
+                          </button>
+                        </form>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               ))}

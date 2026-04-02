@@ -55,7 +55,9 @@ function reviveStore(payload: MockStore): MockStore {
     })),
     supportAgents: (payload.supportAgents ?? mockSupportAgents).map((agent) => ({
       ...agent,
+      role: agent.role ?? "agent",
       isActive: agent.isActive ?? true,
+      invitePending: agent.invitePending ?? false,
       createdAt: new Date(agent.createdAt),
       deactivatedAt: agent.deactivatedAt ? new Date(agent.deactivatedAt) : null,
     })),

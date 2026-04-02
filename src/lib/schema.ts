@@ -49,6 +49,13 @@ export const supportAgents = mysqlTable(
     id: varchar("id", { length: 36 }).primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
     email: varchar("email", { length: 255 }).notNull(),
+    role: mysqlEnum("role", ["owner", "manager", "agent"])
+      .notNull()
+      .default("agent"),
+    passwordHash: varchar("password_hash", { length: 255 }),
+    inviteToken: varchar("invite_token", { length: 255 }),
+    inviteExpiresAt: datetime("invite_expires_at", { mode: "date" }),
+    invitedAt: datetime("invited_at", { mode: "date" }),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: datetime("created_at", { mode: "date" }).notNull(),
     deactivatedAt: datetime("deactivated_at", { mode: "date" }),

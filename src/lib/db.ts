@@ -74,6 +74,11 @@ export async function ensureDatabaseReady() {
           id varchar(36) not null primary key,
           name varchar(255) not null,
           email varchar(255) not null,
+          role enum('owner','manager','agent') not null default 'agent',
+          password_hash varchar(255) null,
+          invite_token varchar(255) null,
+          invite_expires_at datetime null,
+          invited_at datetime null,
           is_active boolean not null default true,
           created_at datetime not null,
           deactivated_at datetime null,
@@ -193,6 +198,11 @@ export async function ensureDatabaseReady() {
         const alterStatements = [
           "alter table tenants add column if not exists is_active boolean not null default true",
           "alter table tenants add column if not exists deactivated_at datetime null",
+          "alter table support_agents add column if not exists role enum('owner','manager','agent') not null default 'agent'",
+          "alter table support_agents add column if not exists password_hash varchar(255) null",
+          "alter table support_agents add column if not exists invite_token varchar(255) null",
+          "alter table support_agents add column if not exists invite_expires_at datetime null",
+          "alter table support_agents add column if not exists invited_at datetime null",
           "alter table tickets add column if not exists assignee_id varchar(36) null",
           "create index if not exists tickets_assignee_idx on tickets (assignee_id)",
         ];

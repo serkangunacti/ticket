@@ -1,4 +1,4 @@
-import type { TicketPriority, TicketStatus } from "@/lib/types";
+import type { SupportRole, TicketPriority, TicketStatus } from "@/lib/types";
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
   new: "Yeni",
@@ -15,6 +15,12 @@ export const PRIORITY_LABELS: Record<TicketPriority, string> = {
   critical: "Kritik",
 };
 
+export const ROLE_LABELS: Record<SupportRole, string> = {
+  owner: "Sahip",
+  manager: "Yönetici",
+  agent: "Destek Uzmanı",
+};
+
 export function getStatusLabel(value: TicketStatus) {
   return STATUS_LABELS[value];
 }
@@ -25,4 +31,8 @@ export function getPriorityLabel(value: TicketPriority) {
 
 export function getActiveLabel(isActive: boolean) {
   return isActive ? "Aktif" : "Pasif";
+}
+
+export function getRoleLabel(role: SupportRole) {
+  return ROLE_LABELS[role];
 }
