@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Download, Filter, MailOpen, Plus } from "lucide-react";
 
+import { SubmitButton } from "@/components/submit-button";
 import { MetricTile, PriorityBadge, StatusBadge, Surface } from "@/components/ticket-ui";
 import { requireAdminSession } from "@/lib/auth";
 import { getActiveLabel, getRoleLabel } from "@/lib/labels";
@@ -62,6 +63,10 @@ export default async function AdminDashboard(props: {
   const metrics = calculateMetrics(tickets);
   const canManageTenants = session.role === "owner" || session.role === "manager";
   const canManageTeam = session.role === "owner";
+  const tenantCreated = searchParams.tenant === "created";
+  const agentCreated = searchParams.agent === "created";
+  const tenantCreateError = searchParams.error === "tenant";
+  const agentCreateError = searchParams.error === "agent";
 
   return (
     <main className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 px-6 py-8 lg:px-10">
@@ -101,6 +106,116 @@ export default async function AdminDashboard(props: {
           value={formatDurationMinutes(metrics.averageResolutionMinutes)}
         />
       </section>
+
+      {canManageTenants || canManageTeam ? (
+        <section className="grid gap-4 xl:grid-cols-2">
+          {canManageTenants ? (
+            <details
+              className="group rounded-[28px] border border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]"
+              open={tenantCreated || tenantCreateError}
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-5 marker:content-none">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
+                    Hızlı işlem
+                  </p>
+                  <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#2a2e36]">
+                    Yeni tenant ekle
+                  </h2>
+                </div>
+                <span className={primaryButtonClass}>
+                  <Plus className="h-4 w-4" /> Formu aç
+                </span>
+              </summary>
+
+              <div className="border-t border-[rgba(42,46,54,0.08)] px-6 pb-6 pt-5">
+                {tenantCreated ? (
+                  <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+                    Tenant oluşturuldu.
+                  </div>
+                ) : null}
+                {tenantCreateError ? (
+                  <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900">
+                    Tenant oluşturulamadı. Gerekli alanları kontrol edin.
+                  </div>
+                ) : null}
+
+                <form action={createTenantAction} className="grid gap-4">
+                  <input name="name" placeholder="Müşteri şirket adı" required />
+                  <input
+                    name="supportAddress"
+                    placeholder="destek@uptexx.com"
+                    defaultValue="destek@uptexx.com"
+                    required
+                  />
+                  <textarea
+                    name="domains"
+                    rows={3}
+                    placeholder="acme.com.tr, acmelojistik.com"
+                    className="resize-none"
+                  />
+                  <SubmitButton
+                    pendingText="Oluşturuluyor..."
+                    className={`w-full ${primaryButtonClass}`}
+                  >
+                    Tenant oluştur
+                  </SubmitButton>
+                </form>
+              </div>
+            </details>
+          ) : null}
+
+          {canManageTeam ? (
+            <details
+              className="group rounded-[28px] border border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]"
+              open={agentCreated || agentCreateError}
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-5 marker:content-none">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
+                    Hızlı işlem
+                  </p>
+                  <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#2a2e36]">
+                    Yeni ekip üyesi ekle
+                  </h2>
+                </div>
+                <span className={primaryButtonClass}>
+                  <Plus className="h-4 w-4" /> Formu aç
+                </span>
+              </summary>
+
+              <div className="border-t border-[rgba(42,46,54,0.08)] px-6 pb-6 pt-5">
+                {agentCreated ? (
+                  <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+                    Ekip üyesi oluşturuldu ve davet akışı başlatıldı.
+                  </div>
+                ) : null}
+                {agentCreateError ? (
+                  <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900">
+                    Ekip üyesi oluşturulamadı. Gerekli alanları kontrol edin.
+                  </div>
+                ) : null}
+
+                <form action={createSupportAgentAction} className="grid gap-4">
+                  <input name="name" placeholder="Ad soyad" required />
+                  <input name="email" type="email" placeholder="ekip@uptexx.com" required />
+                  <select name="role" defaultValue="agent">
+                    <option value="agent">Destek Uzmanı</option>
+                    <option value="manager">Yönetici</option>
+                    <option value="owner">Sahip</option>
+                  </select>
+                  <SubmitButton
+                    pendingText="Oluşturuluyor..."
+                    className={`w-full ${primaryButtonClass}`}
+                  >
+                    Ekip üyesi ekle
+                  </SubmitButton>
+                </form>
+              </div>
+            </details>
+          ) : null}
+        </section>
+      ) : null}
 
       <Surface className="border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
         <div className="flex flex-col gap-6">
@@ -257,39 +372,6 @@ export default async function AdminDashboard(props: {
 
       <section className="grid gap-6 xl:grid-cols-2">
         <div className="min-w-0 space-y-6">
-          {canManageTenants ? (
-            <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
-              <div className="flex items-center gap-3">
-                <Plus className="h-5 w-5 text-[#7d6546]" />
-                <div>
-                  <h2 className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
-                    Yeni tenant
-                  </h2>
-                  <p className="mt-1 text-sm text-[#6b655d]">
-                    Yeni müşteri şirketi ve domain eşlemesi ekleyin.
-                  </p>
-                </div>
-              </div>
-
-              <form action={createTenantAction} className="mt-6 grid gap-4">
-                <input name="name" placeholder="Müşteri şirket adı" required />
-                <input
-                  name="supportAddress"
-                  placeholder="destek@uptexx.com"
-                  defaultValue="destek@uptexx.com"
-                  required
-                />
-                <textarea
-                  name="domains"
-                  rows={3}
-                  placeholder="acme.com.tr, acmelojistik.com"
-                  className="resize-none"
-                />
-                <button className={`w-full ${primaryButtonClass}`}>Tenant oluştur</button>
-              </form>
-            </Surface>
-          ) : null}
-
           <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
               Tenant listesi
@@ -351,19 +433,6 @@ export default async function AdminDashboard(props: {
                 </p>
               </div>
             </div>
-
-            {canManageTeam ? (
-              <form action={createSupportAgentAction} className="mt-6 grid gap-4">
-                <input name="name" placeholder="Ad soyad" required />
-                <input name="email" type="email" placeholder="ekip@uptexx.com" required />
-                <select name="role" defaultValue="agent">
-                  <option value="agent">Destek Uzmanı</option>
-                  <option value="manager">Yönetici</option>
-                  <option value="owner">Sahip</option>
-                </select>
-                <button className={`w-full ${primaryButtonClass}`}>Ekip üyesi ekle</button>
-              </form>
-            ) : null}
 
             <div className="mt-5 space-y-3">
               {agents.map((agent) => (
