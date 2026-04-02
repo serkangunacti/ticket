@@ -39,14 +39,14 @@ const controlItems = [
 export default function TicketLandingPage() {
   return (
     <main className="bg-[#f4f7fb] text-[#16202a]">
-      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#0b1522_0%,#122133_58%,#f4f7fb_58%,#f4f7fb_100%)] text-white">
+      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#0b1522_0%,#122133_100%)] text-white">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute inset-x-0 top-0 h-64 bg-[radial-gradient(circle_at_top,_rgba(97,201,255,0.16),_transparent_58%)]" />
           <div className="absolute left-[-6rem] top-20 h-80 w-80 rounded-full bg-[#27b7e5]/10 blur-3xl" />
           <div className="absolute right-[-7rem] top-32 h-96 w-96 rounded-full bg-[#396af1]/10 blur-3xl" />
         </div>
 
-        <div className="mx-auto flex min-h-[92svh] w-full max-w-7xl flex-col px-6 pb-18 pt-6 lg:px-10">
+        <div className="mx-auto flex w-full max-w-7xl flex-col px-6 pb-20 pt-6 lg:px-10">
           <header className="flex items-center justify-between py-4">
             <div>
               <p className="text-2xl font-semibold tracking-[0.12em] text-white">UPTEXX</p>
