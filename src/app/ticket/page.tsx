@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Mail, ShieldCheck, Table2 } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Mail,
+  ShieldCheck,
+  Table2,
+} from "lucide-react";
 
 import { SectionLabel, Surface } from "@/components/ticket-ui";
 
@@ -21,7 +27,32 @@ const features = [
   },
 ];
 
+const workflowSteps = [
+  "Müşteri destek@uptexx.com adresine mail gönderir.",
+  "Gönderen domain tenant ile eşleşir, ticket otomatik açılır.",
+  "Siz panelden ilk müdahaleyi yapar, çözüm notunu işlersiniz.",
+  "Giden yanıt müşteriye mail olarak gider ve konu başlığı ticket kodunu taşır.",
+  "Müşteri aynı mail üzerinden cevap verdiğinde süreç aynı ticket üzerinde devam eder.",
+];
+
+const reportItems = [
+  "Tenant bazında açılan, çözülen ve bekleyen kayıtları ayrı izleyin.",
+  "Öncelik, durum, tarih aralığı ve domain kırılımıyla rapor alın.",
+  "Excel export ile aylık müşteri raporunu birkaç saniyede hazırlayın.",
+  "PDF özet ile yönetim sunumları için kısa, net dönem çıktısı üretin.",
+];
+
+const controlItems = [
+  "Ticket no, tenant, müşteri, konu ve geliş zamanı tek satırda görünür.",
+  "İlk müdahale zamanı, çözüm zamanı ve çözüm notu kayıt altındadır.",
+  "İç not ve müşteriye giden yanıt birbirinden ayrılır.",
+  "Aynı panel üzerinden filtre, export ve detay inceleme birlikte yapılır.",
+];
+
 export default function TicketLandingPage() {
+  const primaryCtaClass =
+    "inline-flex min-h-12 items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition hover:-translate-y-0.5";
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(5,199,242,0.16),_transparent_22%),linear-gradient(180deg,#061426_0%,#0d2342_34%,#f8fbff_34%,#f8fbff_100%)] text-white">
       <section className="grain-overlay relative overflow-hidden">
@@ -58,16 +89,31 @@ export default function TicketLandingPage() {
               <div className="mt-10 flex flex-col gap-4 sm:flex-row">
                 <Link
                   href="/ticket/login"
-                  className="inline-flex items-center justify-center rounded-full bg-[#05c7f2] px-6 py-3 text-sm font-semibold text-[#061426] transition hover:-translate-y-0.5 hover:bg-[#7ee9ff]"
+                  className={`${primaryCtaClass} bg-[#05c7f2] text-[#061426] hover:bg-[#7ee9ff]`}
                 >
                   Yönetim paneline gir
                 </Link>
                 <a
                   href="#system"
-                  className="inline-flex items-center justify-center rounded-full border border-white/18 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  className={`${primaryCtaClass} bg-[#05c7f2] text-[#061426] hover:bg-[#7ee9ff]`}
                 >
                   Sistemi incele
                 </a>
+              </div>
+
+              <div className="mt-10 grid max-w-2xl gap-4 border-t border-white/10 pt-6 text-sm text-[#d7e9fb] sm:grid-cols-3">
+                <div>
+                  <p className="font-heading text-2xl font-semibold text-white">Mail-first</p>
+                  <p className="mt-2 leading-7">Portal zorunluluğu olmadan müşteriden ticket toplama.</p>
+                </div>
+                <div>
+                  <p className="font-heading text-2xl font-semibold text-white">Tenant filtreli</p>
+                  <p className="mt-2 leading-7">Her müşteriyi ayrı kırılımla raporlayabilen yapı.</p>
+                </div>
+                <div>
+                  <p className="font-heading text-2xl font-semibold text-white">Export hazır</p>
+                  <p className="mt-2 leading-7">Excel ve PDF çıktıları ile aylık operasyon özeti.</p>
+                </div>
               </div>
             </div>
 
@@ -82,7 +128,7 @@ export default function TicketLandingPage() {
                         Live overview
                       </p>
                       <h2 className="mt-2 font-heading text-3xl font-semibold">
-                        Mailden ticket
+                        Operasyon görünümü
                       </h2>
                     </div>
                     <span className="rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-semibold text-emerald-100">
@@ -90,20 +136,41 @@ export default function TicketLandingPage() {
                     </span>
                   </div>
 
-                  <div className="mt-8 space-y-4">
-                    {[
-                      "Müşteri maili tenant domainine göre eşlenir",
-                      "Aynı thread içinde gelen cevaplar ticket geçmişine eklenir",
-                      "Tek panelden iç not, yanıt ve export alınır",
-                    ].map((item) => (
-                      <div
-                        key={item}
-                        className="flex items-start gap-3 rounded-3xl border border-white/10 bg-white/[0.04] p-4"
-                      >
-                        <CheckCircle2 className="mt-1 h-5 w-5 text-[#8fe9ff]" />
-                        <p className="text-sm leading-7 text-[#ecf6ff]">{item}</p>
+                  <div className="mt-8 grid gap-4">
+                    <div className="grid gap-3 rounded-[26px] border border-white/10 bg-white/[0.04] p-5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-[#8fe9ff]">Yeni gelen</span>
+                        <span className="text-white">[#UPX-1048]</span>
                       </div>
-                    ))}
+                      <p className="font-heading text-2xl font-semibold text-white">
+                        Mailden ticket açıldı
+                      </p>
+                      <p className="text-sm leading-7 text-[#dcecff]">
+                        konu: Giriş ekranında hata alıyoruz
+                      </p>
+                      <div className="grid gap-2 text-sm text-[#c0d8ee] sm:grid-cols-2">
+                        <span>tenant: Acme Teknoloji</span>
+                        <span>durum: open</span>
+                        <span>öncelik: high</span>
+                        <span>kanal: email</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {[
+                        "Müşteri maili tenant domainine göre eşlenir",
+                        "Aynı thread içinde gelen cevaplar ticket geçmişine eklenir",
+                        "Tek panelden iç not, yanıt ve export alınır",
+                      ].map((item) => (
+                        <div
+                          key={item}
+                          className="flex items-start gap-3 rounded-3xl border border-white/10 bg-white/[0.04] p-4"
+                        >
+                          <CheckCircle2 className="mt-1 h-5 w-5 text-[#8fe9ff]" />
+                          <p className="text-sm leading-7 text-[#ecf6ff]">{item}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </Surface>
@@ -138,16 +205,14 @@ export default function TicketLandingPage() {
             yönetim paneli üzerinden filtrelenmiş tenant raporlarıyla aylık
             görünürlük sağlarsınız.
           </p>
+          <p className="mt-4 text-sm leading-7 text-[#a9c4df]">
+            Bu yapı özellikle az kişiyle yürütülen teknik operasyonlarda dağınık
+            mail kutularını tek akışta toplamak için tasarlandı.
+          </p>
         </Surface>
 
         <Surface className="grid gap-4 bg-white p-0">
-          {[
-            "1. Müşteri destek@uptexx.com adresine mail gönderir.",
-            "2. Gönderen domain tenant ile eşleşir, ticket otomatik açılır.",
-            "3. Siz panelden ilk müdahaleyi yapar, çözüm notunu işlersiniz.",
-            "4. Giden yanıt müşteriye mail olarak gider ve konu başlığı ticket kodunu taşır.",
-            "5. Müşteri aynı mail üzerinden cevap verdiğinde süreç aynı ticket üzerinde devam eder.",
-          ].map((step) => (
+          {workflowSteps.map((step) => (
             <div
               key={step}
               className="border-b border-[color:var(--line)] px-8 py-6 text-base leading-8 text-[#08192f] last:border-b-0"
@@ -155,6 +220,41 @@ export default function TicketLandingPage() {
               {step}
             </div>
           ))}
+        </Surface>
+      </section>
+
+      <section className="mx-auto grid w-full max-w-7xl gap-6 px-6 pb-24 text-[#08192f] lg:grid-cols-[1.05fr_0.95fr] lg:px-10">
+        <Surface className="bg-white">
+          <SectionLabel>Operasyon Kontrolü</SectionLabel>
+          <h3 className="font-heading mt-6 text-4xl font-semibold tracking-tight text-[#08192f]">
+            Destek sürecini sadece görmek değil, kayıt altına almak için tasarlandı.
+          </h3>
+          <div className="mt-8 space-y-5">
+            {controlItems.map((item) => (
+              <div key={item} className="flex items-start gap-4 border-b border-[color:var(--line)] pb-5 last:border-b-0 last:pb-0">
+                <CheckCircle2 className="mt-1 h-5 w-5 text-[#0d5f86]" />
+                <p className="text-base leading-8 text-[#50657f]">{item}</p>
+              </div>
+            ))}
+          </div>
+        </Surface>
+
+        <Surface className="bg-[linear-gradient(180deg,#f7fbff_0%,#eef5fb_100%)]">
+          <SectionLabel>Raporlama</SectionLabel>
+          <h3 className="font-heading mt-6 text-4xl font-semibold tracking-tight text-[#08192f]">
+            Müşteri görüşmelerini değil, operasyon verisini paylaşın.
+          </h3>
+          <p className="mt-6 text-base leading-8 text-[#50657f]">
+            Aylık rapor hazırlarken farklı ekranlardan veri toplamanıza gerek kalmaz.
+            Aynı panelden filtreler, export alır ve dönem özetini üretirsiniz.
+          </p>
+          <div className="mt-8 space-y-4">
+            {reportItems.map((item) => (
+              <div key={item} className="rounded-[24px] border border-[color:var(--line)] bg-white/80 px-5 py-4 text-sm leading-7 text-[#314963]">
+                {item}
+              </div>
+            ))}
+          </div>
         </Surface>
       </section>
 
