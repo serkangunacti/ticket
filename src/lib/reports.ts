@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
 
+import { getPriorityLabel, getStatusLabel } from "@/lib/labels";
 import type { ReportMetrics, TicketFilters, TicketListItem } from "@/lib/types";
 import { formatDateTime, formatDurationMinutes } from "@/lib/utils";
 
@@ -56,43 +57,47 @@ export async function buildExcelWorkbook(input: {
   workbook.creator = "Uptexx Ticket";
   workbook.created = new Date();
 
-  const summarySheet = workbook.addWorksheet("Summary");
+  const summarySheet = workbook.addWorksheet("Ozet");
   summarySheet.columns = [
-    { header: "Metric", key: "metric", width: 32 },
-    { header: "Value", key: "value", width: 24 },
+    { header: "Metrik", key: "metric", width: 32 },
+    { header: "Deger", key: "value", width: 24 },
   ];
 
   summarySheet.addRows([
-    { metric: "Total tickets", value: input.metrics.totalTickets },
-    { metric: "Open tickets", value: input.metrics.openTickets },
-    { metric: "Closed tickets", value: input.metrics.closedTickets },
+    { metric: "Toplam ticket", value: input.metrics.totalTickets },
+    { metric: "Açık ticket", value: input.metrics.openTickets },
+    { metric: "Kapanan ticket", value: input.metrics.closedTickets },
     {
-      metric: "Average first response",
+      metric: "Ortalama ilk müdahale",
       value: formatDurationMinutes(input.metrics.averageFirstResponseMinutes),
     },
     {
-      metric: "Average resolution",
+      metric: "Ortalama çözüm süresi",
       value: formatDurationMinutes(input.metrics.averageResolutionMinutes),
     },
   ]);
 
-  const ticketsSheet = workbook.addWorksheet("Tickets");
+  const ticketsSheet = workbook.addWorksheet("Ticketlar");
   ticketsSheet.columns = [
-    { header: "Ticket", key: "ticketCode", width: 16 },
+    { header: "Ticket No", key: "ticketCode", width: 16 },
     { header: "Tenant", key: "tenantName", width: 24 },
-    { header: "Customer", key: "customerEmail", width: 28 },
-    { header: "Subject", key: "subject", width: 42 },
-    { header: "Priority", key: "priority", width: 14 },
-    { header: "Status", key: "status", width: 20 },
-    { header: "Opened", key: "firstReceivedAt", width: 22 },
-    { header: "First response", key: "firstResponseAt", width: 22 },
-    { header: "Resolved", key: "resolvedAt", width: 22 },
-    { header: "Resolution note", key: "resolutionNote", width: 42 },
+    { header: "Müşteri", key: "customerEmail", width: 28 },
+    { header: "Atanan", key: "assigneeName", width: 24 },
+    { header: "Konu", key: "subject", width: 42 },
+    { header: "Öncelik", key: "priority", width: 14 },
+    { header: "Durum", key: "status", width: 24 },
+    { header: "Açılış", key: "firstReceivedAt", width: 22 },
+    { header: "İlk müdahale", key: "firstResponseAt", width: 22 },
+    { header: "Çözüm", key: "resolvedAt", width: 22 },
+    { header: "Çözüm notu", key: "resolutionNote", width: 42 },
   ];
 
   for (const ticket of input.tickets) {
     ticketsSheet.addRow({
       ...ticket,
+      assigneeName: ticket.assigneeName ?? "Atanmadı",
+      priority: getPriorityLabel(ticket.priority),
+      status: getStatusLabel(ticket.status),
       firstReceivedAt: formatDateTime(ticket.firstReceivedAt),
       firstResponseAt: formatDateTime(ticket.firstResponseAt),
       resolvedAt: formatDateTime(ticket.resolvedAt),
@@ -116,41 +121,53 @@ export async function buildPdfBuffer(input: {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    doc.fontSize(24).text("Uptexx Monthly Ticket Report");
+    doc.fontSize(24).text("Uptexx Aylik Ticket Raporu");
     doc.moveDown(0.5);
     doc.fontSize(10).fillColor("#5f6570").text(
-      `Generated at ${formatDateTime(new Date(), "en-US")}`,
+      `Olusturulma: ${formatDateTime(new Date())}`,
     );
     doc.moveDown();
 
-    doc.fontSize(16).fillColor("#111827").text("Summary");
+    doc.fontSize(16).fillColor("#111827").text("Özet");
     doc.moveDown(0.5);
     doc.fontSize(11);
-    doc.text(`Total tickets: ${input.metrics.totalTickets}`);
-    doc.text(`Open tickets: ${input.metrics.openTickets}`);
-    doc.text(`Closed tickets: ${input.metrics.closedTickets}`);
+    doc.text(`Toplam ticket: ${input.metrics.totalTickets}`);
+    doc.text(`Açık ticket: ${input.metrics.openTickets}`);
+    doc.text(`Kapanan ticket: ${input.metrics.closedTickets}`);
     doc.text(
-      `Average first response: ${formatDurationMinutes(
+      `Ortalama ilk müdahale: ${formatDurationMinutes(
         input.metrics.averageFirstResponseMinutes,
       )}`,
     );
     doc.text(
-      `Average resolution: ${formatDurationMinutes(
+      `Ortalama çözüm: ${formatDurationMinutes(
         input.metrics.averageResolutionMinutes,
       )}`,
     );
 
     doc.moveDown();
-    doc.fontSize(16).text("Filters");
+    doc.fontSize(16).text("Filtreler");
     doc.moveDown(0.5);
     doc.fontSize(11);
-    doc.text(`Tenant: ${input.filters.tenantId ?? "All"}`);
-    doc.text(`Priority: ${input.filters.priority ?? "All"}`);
-    doc.text(`Status: ${input.filters.status ?? "All"}`);
-    doc.text(`Search: ${input.filters.query ?? "-"}`);
+    doc.text(`Tenant: ${input.filters.tenantId ?? "Tümü"}`);
+    doc.text(
+      `Öncelik: ${
+        input.filters.priority && input.filters.priority !== "all"
+          ? getPriorityLabel(input.filters.priority)
+          : "Tümü"
+      }`,
+    );
+    doc.text(
+      `Durum: ${
+        input.filters.status && input.filters.status !== "all"
+          ? getStatusLabel(input.filters.status)
+          : "Tümü"
+      }`,
+    );
+    doc.text(`Arama: ${input.filters.query ?? "-"}`);
 
     doc.moveDown();
-    doc.fontSize(16).text("Critical tickets");
+    doc.fontSize(16).text("Öne çıkan ticketlar");
     doc.moveDown(0.5);
 
     const criticalTickets = input.tickets.filter(
@@ -158,7 +175,7 @@ export async function buildPdfBuffer(input: {
     );
 
     if (!criticalTickets.length) {
-      doc.fontSize(11).text("No high-priority tickets in selected range.");
+      doc.fontSize(11).text("Seçilen aralıkta yüksek öncelikli ticket bulunmuyor.");
     } else {
       criticalTickets.slice(0, 10).forEach((ticket) => {
         doc
@@ -169,7 +186,7 @@ export async function buildPdfBuffer(input: {
           .fontSize(10)
           .fillColor("#5f6570")
           .text(
-            `${ticket.tenantName} | ${ticket.customerEmail} | ${ticket.status.toUpperCase()} | ${formatDateTime(ticket.firstReceivedAt)}`,
+            `${ticket.tenantName} | ${ticket.customerEmail} | ${getStatusLabel(ticket.status)} | ${formatDateTime(ticket.firstReceivedAt)}`,
           );
         doc.moveDown(0.4);
       });

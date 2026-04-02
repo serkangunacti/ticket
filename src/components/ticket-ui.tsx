@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { getPriorityLabel, getStatusLabel } from "@/lib/labels";
+import type { TicketPriority, TicketStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function SectionLabel({
@@ -56,7 +58,7 @@ export function StatusBadge({ value }: { value: string }) {
         colorMap[value] ?? "bg-zinc-100 text-zinc-700",
       )}
     >
-      {value.replace("_", " ")}
+      {getStatusLabel(value as TicketStatus) ?? value.replace("_", " ")}
     </span>
   );
 }
@@ -76,7 +78,7 @@ export function PriorityBadge({ value }: { value: string }) {
         colorMap[value] ?? "bg-zinc-100 text-zinc-700",
       )}
     >
-      {value}
+      {getPriorityLabel(value as TicketPriority) ?? value}
     </span>
   );
 }

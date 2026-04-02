@@ -64,9 +64,21 @@ export async function ensureDatabaseReady() {
           name varchar(255) not null,
           slug varchar(255) not null,
           support_address varchar(255) not null,
+          is_active boolean not null default true,
+          deactivated_at datetime null,
           created_at datetime not null,
           updated_at datetime not null,
           unique key tenants_slug_idx (slug)
+        )`,
+        `create table if not exists support_agents (
+          id varchar(36) not null primary key,
+          name varchar(255) not null,
+          email varchar(255) not null,
+          is_active boolean not null default true,
+          created_at datetime not null,
+          deactivated_at datetime null,
+          updated_at datetime not null,
+          unique key support_agents_email_idx (email)
         )`,
         `create table if not exists tenant_domains (
           id varchar(36) not null primary key,
@@ -92,6 +104,7 @@ export async function ensureDatabaseReady() {
           ticket_code varchar(24) not null,
           tenant_id varchar(36) not null,
           customer_id varchar(36) not null,
+          assignee_id varchar(36) null,
           subject varchar(255) not null,
           description text not null,
           status enum('new','open','waiting_customer','resolved','closed') not null,
@@ -107,7 +120,8 @@ export async function ensureDatabaseReady() {
           unique key tickets_sequence_idx (sequence_no),
           unique key tickets_code_idx (ticket_code),
           key tickets_tenant_idx (tenant_id),
-          key tickets_customer_idx (customer_id)
+          key tickets_customer_idx (customer_id),
+          key tickets_assignee_idx (assignee_id)
         )`,
         `create table if not exists ticket_messages (
           id varchar(36) not null primary key,
@@ -173,6 +187,17 @@ export async function ensureDatabaseReady() {
 
       try {
         for (const statement of ddlStatements) {
+          await connection.query(statement);
+        }
+
+        const alterStatements = [
+          "alter table tenants add column if not exists is_active boolean not null default true",
+          "alter table tenants add column if not exists deactivated_at datetime null",
+          "alter table tickets add column if not exists assignee_id varchar(36) null",
+          "create index if not exists tickets_assignee_idx on tickets (assignee_id)",
+        ];
+
+        for (const statement of alterStatements) {
           await connection.query(statement);
         }
       } finally {

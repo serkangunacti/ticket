@@ -33,11 +33,29 @@ export const tenants = mysqlTable(
     name: varchar("name", { length: 255 }).notNull(),
     slug: varchar("slug", { length: 255 }).notNull(),
     supportAddress: varchar("support_address", { length: 255 }).notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    deactivatedAt: datetime("deactivated_at", { mode: "date" }),
     createdAt: datetime("created_at", { mode: "date" }).notNull(),
     updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
   },
   (table) => ({
     slugIdx: uniqueIndex("tenants_slug_idx").on(table.slug),
+  }),
+);
+
+export const supportAgents = mysqlTable(
+  "support_agents",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: datetime("created_at", { mode: "date" }).notNull(),
+    deactivatedAt: datetime("deactivated_at", { mode: "date" }),
+    updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+  },
+  (table) => ({
+    emailIdx: uniqueIndex("support_agents_email_idx").on(table.email),
   }),
 );
 
@@ -82,6 +100,7 @@ export const tickets = mysqlTable(
     ticketCode: varchar("ticket_code", { length: 24 }).notNull(),
     tenantId: varchar("tenant_id", { length: 36 }).notNull(),
     customerId: varchar("customer_id", { length: 36 }).notNull(),
+    assigneeId: varchar("assignee_id", { length: 36 }),
     subject: varchar("subject", { length: 255 }).notNull(),
     description: text("description").notNull(),
     status: mysqlEnum("status", [
@@ -110,6 +129,7 @@ export const tickets = mysqlTable(
     ticketCodeIdx: uniqueIndex("tickets_code_idx").on(table.ticketCode),
     tenantIdx: index("tickets_tenant_idx").on(table.tenantId),
     customerIdx: index("tickets_customer_idx").on(table.customerId),
+    assigneeIdx: index("tickets_assignee_idx").on(table.assigneeId),
   }),
 );
 

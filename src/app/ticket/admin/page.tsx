@@ -2,12 +2,20 @@ import Link from "next/link";
 import { Download, Filter, MailOpen, Plus } from "lucide-react";
 
 import { MetricTile, PriorityBadge, StatusBadge, Surface } from "@/components/ticket-ui";
+import { getActiveLabel } from "@/lib/labels";
 import { calculateMetrics } from "@/lib/reports";
-import { listTenants, listTickets } from "@/lib/data";
+import { listSupportAgents, listTenants, listTickets } from "@/lib/data";
 import type { TicketFilters } from "@/lib/types";
 import { formatDateTime, formatDurationMinutes } from "@/lib/utils";
 
-import { createTenantAction } from "./actions";
+import {
+  createSupportAgentAction,
+  createTenantAction,
+  toggleSupportAgentStateAction,
+  toggleTenantStateAction,
+} from "./actions";
+
+export const dynamic = "force-dynamic";
 
 const primaryButtonClass =
   "inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2f3a49] px-4 text-sm font-semibold text-white transition hover:bg-[#24303e]";
@@ -44,7 +52,11 @@ export default async function AdminDashboard(props: {
 }) {
   const searchParams = (await props.searchParams) ?? {};
   const filters = getFilters(searchParams);
-  const [tenants, tickets] = await Promise.all([listTenants(), listTickets(filters)]);
+  const [tenants, tickets, agents] = await Promise.all([
+    listTenants(),
+    listTickets(filters),
+    listSupportAgents(),
+  ]);
   const metrics = calculateMetrics(tickets);
 
   return (
@@ -116,18 +128,18 @@ export default async function AdminDashboard(props: {
             </select>
             <select name="status" defaultValue={filters.status ?? "all"}>
               <option value="all">Tüm durumlar</option>
-              <option value="new">New</option>
-              <option value="open">Open</option>
-              <option value="waiting_customer">Waiting customer</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
+              <option value="new">Yeni</option>
+              <option value="open">Açık</option>
+              <option value="waiting_customer">Müşteri yanıtı bekleniyor</option>
+              <option value="resolved">Çözüldü</option>
+              <option value="closed">Kapatıldı</option>
             </select>
             <select name="priority" defaultValue={filters.priority ?? "all"}>
               <option value="all">Tüm öncelikler</option>
-              <option value="low">Low</option>
+              <option value="low">Düşük</option>
               <option value="normal">Normal</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
+              <option value="high">Yüksek</option>
+              <option value="critical">Kritik</option>
             </select>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
               <input name="from" type="date" defaultValue={filters.from ?? ""} />
@@ -162,6 +174,7 @@ export default async function AdminDashboard(props: {
                   <th className="px-6 py-4">Ticket</th>
                   <th className="px-6 py-4">Müşteri</th>
                   <th className="px-6 py-4">Tenant</th>
+                  <th className="px-6 py-4">Atanan</th>
                   <th className="px-6 py-4">Durum</th>
                   <th className="px-6 py-4">Öncelik</th>
                   <th className="px-6 py-4">İlk yanıt</th>
@@ -198,6 +211,9 @@ export default async function AdminDashboard(props: {
                         <p className="mt-1 text-[#6b655d]">{ticket.customerEmail}</p>
                       </td>
                       <td className="px-6 py-5 text-sm text-[#3f4652]">{ticket.tenantName}</td>
+                      <td className="px-6 py-5 text-sm text-[#6b655d]">
+                        {ticket.assigneeName ?? "Atanmadı"}
+                      </td>
                       <td className="px-6 py-5">
                         <StatusBadge value={ticket.status} />
                       </td>
@@ -274,10 +290,78 @@ export default async function AdminDashboard(props: {
                   key={tenant.id}
                   className="min-w-0 rounded-2xl border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-4 py-4"
                 >
-                  <p className="break-words font-semibold text-[#2a2e36]">{tenant.name}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words font-semibold text-[#2a2e36]">{tenant.name}</p>
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a6d4b]">
+                        {getActiveLabel(tenant.isActive)}
+                      </p>
+                    </div>
+                    <form action={toggleTenantStateAction}>
+                      <input type="hidden" name="tenantId" value={tenant.id} />
+                      <input
+                        type="hidden"
+                        name="isActive"
+                        value={tenant.isActive ? "false" : "true"}
+                      />
+                      <button className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1.5 text-xs font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]">
+                        {tenant.isActive ? "Pasife çek" : "Aktif et"}
+                      </button>
+                    </form>
+                  </div>
                   <p className="mt-1 break-all text-sm leading-7 text-[#6b655d]">
                     {tenant.domains.join(", ") || "Henüz domain tanımlı değil"}
                   </p>
+                </div>
+              ))}
+            </div>
+          </Surface>
+
+          <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+            <div className="flex items-center gap-3">
+              <Plus className="h-5 w-5 text-[#7d6546]" />
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
+                  Ekip üyeleri
+                </h2>
+                <p className="mt-1 text-sm text-[#6b655d]">
+                  Ticketlara atanabilecek iç ekip kullanıcılarını yönetin.
+                </p>
+              </div>
+            </div>
+
+            <form action={createSupportAgentAction} className="mt-6 grid gap-4">
+              <input name="name" placeholder="Ad soyad" required />
+              <input name="email" type="email" placeholder="ekip@uptexx.com" required />
+              <button className={`w-full ${primaryButtonClass}`}>Ekip üyesi ekle</button>
+            </form>
+
+            <div className="mt-5 space-y-3">
+              {agents.map((agent) => (
+                <div
+                  key={agent.id}
+                  className="min-w-0 rounded-2xl border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-4 py-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words font-semibold text-[#2a2e36]">{agent.name}</p>
+                      <p className="mt-1 break-all text-sm text-[#6b655d]">{agent.email}</p>
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a6d4b]">
+                        {getActiveLabel(agent.isActive)}
+                      </p>
+                    </div>
+                    <form action={toggleSupportAgentStateAction}>
+                      <input type="hidden" name="agentId" value={agent.id} />
+                      <input
+                        type="hidden"
+                        name="isActive"
+                        value={agent.isActive ? "false" : "true"}
+                      />
+                      <button className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fffaf2] px-3 py-1.5 text-xs font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]">
+                        {agent.isActive ? "Pasife çek" : "Aktif et"}
+                      </button>
+                    </form>
+                  </div>
                 </div>
               ))}
             </div>

@@ -15,7 +15,18 @@ export type TenantRecord = {
   slug: string;
   supportAddress: string;
   domains: string[];
+  isActive: boolean;
+  deactivatedAt: Date | null;
   createdAt: Date;
+};
+
+export type SupportAgentRecord = {
+  id: string;
+  name: string;
+  email: string;
+  isActive: boolean;
+  createdAt: Date;
+  deactivatedAt: Date | null;
 };
 
 export type CustomerRecord = {
@@ -53,9 +64,12 @@ export type TicketListItem = {
   ticketCode: string;
   tenantId: string;
   tenantName: string;
+  tenantIsActive: boolean;
   customerId: string;
   customerEmail: string;
   customerName: string | null;
+  assigneeId: string | null;
+  assigneeName: string | null;
   subject: string;
   description: string;
   status: TicketStatus;

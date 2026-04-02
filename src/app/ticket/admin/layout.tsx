@@ -5,6 +5,8 @@ import { env, hasDatabase, hasMicrosoftMail } from "@/lib/env";
 
 import { logoutAction, syncMailboxAction } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

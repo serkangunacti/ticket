@@ -26,6 +26,7 @@ import {
   customers,
   mailThreads,
   monthlyReports,
+  supportAgents,
   tenantDomains,
   tenants,
   ticketMessages,
@@ -35,6 +36,7 @@ import { collectThreadCandidates } from "@/lib/threading";
 import type {
   CustomerRecord,
   InboundMail,
+  SupportAgentRecord,
   TenantRecord,
   TicketDetail,
   TicketFilters,
@@ -57,6 +59,8 @@ function getUnassignedTenant(store: Awaited<ReturnType<typeof loadMockStore>>) {
       slug: "unassigned",
       supportAddress: env.M365_SHARED_MAILBOX,
       domains: [],
+      isActive: true,
+      deactivatedAt: null,
       createdAt: now(),
     };
     store.tenants.push(tenant);
@@ -91,6 +95,55 @@ async function ensureDbAdminUser() {
 
   await db.insert(adminUsers).values(admin);
   return admin;
+}
+
+async function ensureDefaultSupportAgent() {
+  if (!hasAdminCredentials) return null;
+
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    let agent = store.supportAgents.find((item) => item.email === env.ADMIN_EMAIL);
+    if (!agent) {
+      agent = {
+        id: randomUUID(),
+        name: "Uptexx Admin",
+        email: env.ADMIN_EMAIL!,
+        isActive: true,
+        createdAt: now(),
+        deactivatedAt: null,
+      };
+      store.supportAgents.push(agent);
+      await saveMockStore(store);
+    }
+    return agent;
+  }
+
+  await ensureDatabaseReady();
+
+  const db = getDb();
+  if (!db) return null;
+
+  const existing = await db
+    .select()
+    .from(supportAgents)
+    .where(eq(supportAgents.email, env.ADMIN_EMAIL!))
+    .limit(1);
+
+  if (existing[0]) return existing[0];
+
+  const createdAt = now();
+  const agent = {
+    id: randomUUID(),
+    name: "Uptexx Admin",
+    email: env.ADMIN_EMAIL!,
+    isActive: true,
+    createdAt,
+    deactivatedAt: null,
+    updatedAt: createdAt,
+  };
+
+  await db.insert(supportAgents).values(agent);
+  return agent;
 }
 
 export async function verifyAdminLogin(email: string, password: string) {
@@ -186,6 +239,8 @@ export async function listTenants(): Promise<TenantRecord[]> {
     name: tenant.name,
     slug: tenant.slug,
     supportAddress: tenant.supportAddress,
+    isActive: tenant.isActive,
+    deactivatedAt: tenant.deactivatedAt,
     createdAt: tenant.createdAt,
     domains: domainRows
       .filter((domain) => domain.tenantId === tenant.id)
@@ -206,6 +261,8 @@ export async function createTenant(input: {
     slug: slugify(input.name),
     supportAddress: input.supportAddress.trim(),
     domains: input.domains.map((domain: string) => domain.toLowerCase()),
+    isActive: true,
+    deactivatedAt: null,
     createdAt: now(),
   };
 
@@ -233,6 +290,8 @@ export async function createTenant(input: {
     name: tenant.name,
     slug: tenant.slug,
     supportAddress: tenant.supportAddress,
+    isActive: tenant.isActive,
+    deactivatedAt: tenant.deactivatedAt,
     createdAt: tenant.createdAt,
     updatedAt: tenant.createdAt,
   });
@@ -257,6 +316,177 @@ export async function createTenant(input: {
   });
 
   return tenant;
+}
+
+export async function setTenantActiveState(input: {
+  tenantId: string;
+  isActive: boolean;
+  adminEmail: string;
+}) {
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    const tenant = store.tenants.find((item) => item.id === input.tenantId);
+    if (!tenant) return null;
+    tenant.isActive = input.isActive;
+    tenant.deactivatedAt = input.isActive ? null : now();
+    await saveMockStore(store);
+    await recordAudit({
+      adminEmail: input.adminEmail,
+      action: "tenant.state",
+      entityType: "tenant",
+      entityId: tenant.id,
+      summary: `${tenant.name} ${input.isActive ? "activated" : "deactivated"}`,
+    });
+    return tenant;
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return null;
+
+  await db
+    .update(tenants)
+    .set({
+      isActive: input.isActive,
+      deactivatedAt: input.isActive ? null : now(),
+      updatedAt: now(),
+    })
+    .where(eq(tenants.id, input.tenantId));
+
+  await recordAudit({
+    adminEmail: input.adminEmail,
+    action: "tenant.state",
+    entityType: "tenant",
+    entityId: input.tenantId,
+    summary: `Updated tenant activity ${input.tenantId}`,
+  });
+
+  const allTenants = await listTenants();
+  return allTenants.find((item) => item.id === input.tenantId) ?? null;
+}
+
+export async function listSupportAgents(): Promise<SupportAgentRecord[]> {
+  await ensureDefaultSupportAgent();
+
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    return [...store.supportAgents].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return [];
+
+  const rows = await db.select().from(supportAgents).orderBy(asc(supportAgents.name));
+  return rows.map((agent) => ({
+    id: agent.id,
+    name: agent.name,
+    email: agent.email,
+    isActive: agent.isActive,
+    createdAt: agent.createdAt,
+    deactivatedAt: agent.deactivatedAt,
+  }));
+}
+
+export async function createSupportAgent(input: {
+  name: string;
+  email: string;
+  adminEmail: string;
+}) {
+  const createdAt = now();
+  const agent: SupportAgentRecord = {
+    id: randomUUID(),
+    name: input.name.trim(),
+    email: input.email.trim().toLowerCase(),
+    isActive: true,
+    createdAt,
+    deactivatedAt: null,
+  };
+
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    store.supportAgents.push(agent);
+    await saveMockStore(store);
+    await recordAudit({
+      adminEmail: input.adminEmail,
+      action: "agent.create",
+      entityType: "support_agent",
+      entityId: agent.id,
+      summary: `Created support agent ${agent.name}`,
+    });
+    return agent;
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return agent;
+
+  await db.insert(supportAgents).values({
+    id: agent.id,
+    name: agent.name,
+    email: agent.email,
+    isActive: true,
+    createdAt,
+    deactivatedAt: null,
+    updatedAt: createdAt,
+  });
+
+  await recordAudit({
+    adminEmail: input.adminEmail,
+    action: "agent.create",
+    entityType: "support_agent",
+    entityId: agent.id,
+    summary: `Created support agent ${agent.name}`,
+  });
+
+  return agent;
+}
+
+export async function setSupportAgentActiveState(input: {
+  agentId: string;
+  isActive: boolean;
+  adminEmail: string;
+}) {
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    const agent = store.supportAgents.find((item) => item.id === input.agentId);
+    if (!agent) return null;
+    agent.isActive = input.isActive;
+    agent.deactivatedAt = input.isActive ? null : now();
+    await saveMockStore(store);
+    await recordAudit({
+      adminEmail: input.adminEmail,
+      action: "agent.state",
+      entityType: "support_agent",
+      entityId: agent.id,
+      summary: `${agent.name} ${input.isActive ? "activated" : "deactivated"}`,
+    });
+    return agent;
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return null;
+
+  await db
+    .update(supportAgents)
+    .set({
+      isActive: input.isActive,
+      deactivatedAt: input.isActive ? null : now(),
+      updatedAt: now(),
+    })
+    .where(eq(supportAgents.id, input.agentId));
+
+  await recordAudit({
+    adminEmail: input.adminEmail,
+    action: "agent.state",
+    entityType: "support_agent",
+    entityId: input.agentId,
+    summary: `Updated support agent activity ${input.agentId}`,
+  });
+
+  const agents = await listSupportAgents();
+  return agents.find((item) => item.id === input.agentId) ?? null;
 }
 
 function applyFiltersToMockTickets(filters: TicketFilters) {
@@ -322,9 +552,12 @@ export async function listTickets(filters: TicketFilters): Promise<TicketListIte
       ticketCode: tickets.ticketCode,
       tenantId: tickets.tenantId,
       tenantName: tenants.name,
+      tenantIsActive: tenants.isActive,
       customerId: tickets.customerId,
       customerEmail: customers.email,
       customerName: customers.name,
+      assigneeId: tickets.assigneeId,
+      assigneeName: supportAgents.name,
       subject: tickets.subject,
       description: tickets.description,
       status: tickets.status,
@@ -340,6 +573,7 @@ export async function listTickets(filters: TicketFilters): Promise<TicketListIte
     .from(tickets)
     .innerJoin(customers, eq(customers.id, tickets.customerId))
     .innerJoin(tenants, eq(tenants.id, tickets.tenantId))
+    .leftJoin(supportAgents, eq(supportAgents.id, tickets.assigneeId))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(tickets.firstReceivedAt));
 
@@ -364,9 +598,12 @@ export async function getTicketDetail(ticketId: string): Promise<TicketDetail | 
         ticketCode: tickets.ticketCode,
         tenantId: tickets.tenantId,
         tenantName: tenants.name,
+        tenantIsActive: tenants.isActive,
         customerId: tickets.customerId,
         customerEmail: customers.email,
         customerName: customers.name,
+        assigneeId: tickets.assigneeId,
+        assigneeName: supportAgents.name,
         subject: tickets.subject,
         description: tickets.description,
         status: tickets.status,
@@ -382,6 +619,7 @@ export async function getTicketDetail(ticketId: string): Promise<TicketDetail | 
       .from(tickets)
       .innerJoin(customers, eq(customers.id, tickets.customerId))
       .innerJoin(tenants, eq(tenants.id, tickets.tenantId))
+      .leftJoin(supportAgents, eq(supportAgents.id, tickets.assigneeId))
       .where(eq(tickets.id, ticketId))
       .limit(1),
     db.select().from(tenantDomains),
@@ -467,6 +705,8 @@ async function findTenantForEmail(email: string) {
         slug: tenantRows[0].slug,
         supportAddress: tenantRows[0].supportAddress,
         domains: [domain],
+        isActive: tenantRows[0].isActive,
+        deactivatedAt: tenantRows[0].deactivatedAt,
         createdAt: tenantRows[0].createdAt,
       } satisfies TenantRecord;
     }
@@ -485,6 +725,8 @@ async function findTenantForEmail(email: string) {
       slug: fallbackRows[0].slug,
       supportAddress: fallbackRows[0].supportAddress,
       domains: [],
+      isActive: fallbackRows[0].isActive,
+      deactivatedAt: fallbackRows[0].deactivatedAt,
       createdAt: fallbackRows[0].createdAt,
     };
   }
@@ -496,6 +738,8 @@ async function findTenantForEmail(email: string) {
     name: "Unassigned",
     slug: "unassigned",
     supportAddress: env.M365_SHARED_MAILBOX,
+    isActive: true,
+    deactivatedAt: null,
     createdAt,
     updatedAt: createdAt,
   });
@@ -506,6 +750,8 @@ async function findTenantForEmail(email: string) {
     slug: "unassigned",
     supportAddress: env.M365_SHARED_MAILBOX,
     domains: [],
+    isActive: true,
+    deactivatedAt: null,
     createdAt,
   };
 }
@@ -693,10 +939,13 @@ export async function ingestInboundMail(mail: InboundMail) {
       ticketCode: createTicketCode(sequenceNo),
       tenantId: tenant!.id,
       tenantName: tenant!.name,
+      tenantIsActive: tenant!.isActive,
       tenantDomains: tenant!.domains,
       customerId: customer!.id,
       customerEmail: customer!.email,
       customerName: customer!.name,
+      assigneeId: null,
+      assigneeName: null,
       subject: mail.subject,
       description: mail.text,
       status: "new",
@@ -814,6 +1063,7 @@ export async function ingestInboundMail(mail: InboundMail) {
     ticketCode: createTicketCode(sequenceNo),
     tenantId: tenant!.id,
     customerId: customer!.id,
+    assigneeId: null,
     subject: mail.subject,
     description: mail.text,
     status: "new",
@@ -899,6 +1149,7 @@ export async function updateTicket(input: {
   ticketId: string;
   status: TicketStatus;
   priority: TicketPriority;
+  assigneeId?: string | null;
   resolutionNote?: string;
   adminEmail: string;
 }) {
@@ -906,11 +1157,19 @@ export async function updateTicket(input: {
     const store = await loadMockStore();
     const ticket = store.tickets.find((item) => item.id === input.ticketId);
     if (!ticket) return null;
+    const assignee =
+      input.assigneeId && input.assigneeId !== "unassigned"
+        ? store.supportAgents.find((item) => item.id === input.assigneeId) ?? null
+        : null;
     ticket.status = input.status;
     ticket.priority = input.priority;
+    ticket.assigneeId = assignee?.id ?? null;
+    ticket.assigneeName = assignee?.name ?? null;
     ticket.resolutionNote = input.resolutionNote ?? null;
     if (input.status === "resolved" || input.status === "closed") {
       ticket.resolvedAt = now();
+    } else {
+      ticket.resolvedAt = null;
     }
     ticket.lastActivityAt = now();
     await saveMockStore(store);
@@ -937,6 +1196,8 @@ export async function updateTicket(input: {
     .set({
       status: input.status,
       priority: input.priority,
+      assigneeId:
+        input.assigneeId && input.assigneeId !== "unassigned" ? input.assigneeId : null,
       resolutionNote: input.resolutionNote ?? null,
       resolvedAt,
       lastActivityAt: now(),

@@ -1,8 +1,18 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { mockCustomers, mockTenants, mockTickets } from "@/lib/mock-data";
-import type { CustomerRecord, TenantRecord, TicketDetail } from "@/lib/types";
+import {
+  mockCustomers,
+  mockSupportAgents,
+  mockTenants,
+  mockTickets,
+} from "@/lib/mock-data";
+import type {
+  CustomerRecord,
+  SupportAgentRecord,
+  TenantRecord,
+  TicketDetail,
+} from "@/lib/types";
 
 type AuditEntry = {
   id: string;
@@ -16,6 +26,7 @@ type AuditEntry = {
 
 export type MockStore = {
   tenants: TenantRecord[];
+  supportAgents: SupportAgentRecord[];
   customers: CustomerRecord[];
   tickets: TicketDetail[];
   auditLogs: AuditEntry[];
@@ -27,6 +38,7 @@ const STORE_FILE = path.join(STORE_DIR, "mock-store.json");
 function createInitialStore(): MockStore {
   return {
     tenants: structuredClone(mockTenants),
+    supportAgents: structuredClone(mockSupportAgents),
     customers: structuredClone(mockCustomers),
     tickets: structuredClone(mockTickets),
     auditLogs: [],
@@ -35,13 +47,24 @@ function createInitialStore(): MockStore {
 
 function reviveStore(payload: MockStore): MockStore {
   return {
-    tenants: payload.tenants.map((tenant) => ({
+    tenants: (payload.tenants ?? []).map((tenant) => ({
       ...tenant,
+      isActive: tenant.isActive ?? true,
+      deactivatedAt: tenant.deactivatedAt ? new Date(tenant.deactivatedAt) : null,
       createdAt: new Date(tenant.createdAt),
+    })),
+    supportAgents: (payload.supportAgents ?? mockSupportAgents).map((agent) => ({
+      ...agent,
+      isActive: agent.isActive ?? true,
+      createdAt: new Date(agent.createdAt),
+      deactivatedAt: agent.deactivatedAt ? new Date(agent.deactivatedAt) : null,
     })),
     customers: payload.customers,
     tickets: payload.tickets.map((ticket) => ({
       ...ticket,
+      tenantIsActive: ticket.tenantIsActive ?? true,
+      assigneeId: ticket.assigneeId ?? null,
+      assigneeName: ticket.assigneeName ?? null,
       firstReceivedAt: new Date(ticket.firstReceivedAt),
       firstResponseAt: ticket.firstResponseAt ? new Date(ticket.firstResponseAt) : null,
       resolvedAt: ticket.resolvedAt ? new Date(ticket.resolvedAt) : null,

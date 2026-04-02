@@ -1,6 +1,11 @@
 import { subDays, subHours } from "date-fns";
 
-import type { CustomerRecord, TenantRecord, TicketDetail } from "@/lib/types";
+import type {
+  CustomerRecord,
+  SupportAgentRecord,
+  TenantRecord,
+  TicketDetail,
+} from "@/lib/types";
 
 const now = new Date();
 
@@ -11,6 +16,8 @@ export const mockTenants: TenantRecord[] = [
     slug: "acme-lojistik",
     supportAddress: "destek@uptexx.com",
     domains: ["acme.com.tr", "acmelojistik.com"],
+    isActive: true,
+    deactivatedAt: null,
     createdAt: subDays(now, 90),
   },
   {
@@ -19,7 +26,20 @@ export const mockTenants: TenantRecord[] = [
     slug: "nova-finans",
     supportAddress: "destek@uptexx.com",
     domains: ["novafinans.com"],
+    isActive: true,
+    deactivatedAt: null,
     createdAt: subDays(now, 45),
+  },
+];
+
+export const mockSupportAgents: SupportAgentRecord[] = [
+  {
+    id: "agent-1",
+    name: "Serkan Günaktı",
+    email: "test@test.com",
+    isActive: true,
+    createdAt: subDays(now, 120),
+    deactivatedAt: null,
   },
 ];
 
@@ -46,10 +66,13 @@ export const mockTickets: TicketDetail[] = [
     ticketCode: "UPX-1001",
     tenantId: "tenant-1",
     tenantName: "Acme Lojistik",
+    tenantIsActive: true,
     tenantDomains: ["acme.com.tr", "acmelojistik.com"],
     customerId: "customer-1",
     customerEmail: "selin.yilmaz@acme.com.tr",
     customerName: "Selin Yılmaz",
+    assigneeId: "agent-1",
+    assigneeName: "Serkan Günaktı",
     subject: "Power BI raporunda veri gecikmesi",
     description:
       "Sabah 09:00 sonrası satış verileri dashboard üzerinde görünmüyor.",
@@ -96,10 +119,13 @@ export const mockTickets: TicketDetail[] = [
     ticketCode: "UPX-1002",
     tenantId: "tenant-2",
     tenantName: "Nova Finans",
+    tenantIsActive: true,
     tenantDomains: ["novafinans.com"],
     customerId: "customer-2",
     customerEmail: "can.kaya@novafinans.com",
     customerName: "Can Kaya",
+    assigneeId: null,
+    assigneeName: null,
     subject: "Copilot lisans aktivasyonu hakkında",
     description:
       "Yeni kullanıcı için Copilot lisans atamasında hata alınıyor.",

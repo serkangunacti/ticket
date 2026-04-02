@@ -2,17 +2,23 @@ import Link from "next/link";
 import { ArrowLeft, MessageSquareQuote, SendHorizonal } from "lucide-react";
 
 import { PriorityBadge, SectionLabel, StatusBadge, Surface } from "@/components/ticket-ui";
-import { getTicketDetail } from "@/lib/data";
+import { listSupportAgents, getTicketDetail } from "@/lib/data";
+import { getActiveLabel } from "@/lib/labels";
 import { formatDateTime } from "@/lib/utils";
 
 import { addTicketMessageAction, updateTicketAction } from "../../actions";
+
+export const dynamic = "force-dynamic";
 
 export default async function TicketDetailPage(props: {
   params: Promise<{ ticketId: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await props.params;
-  const ticket = await getTicketDetail(params.ticketId);
+  const [ticket, agents] = await Promise.all([
+    getTicketDetail(params.ticketId),
+    listSupportAgents(),
+  ]);
 
   if (!ticket) {
     return (
@@ -62,8 +68,16 @@ export default async function TicketDetailPage(props: {
                 {ticket.tenantName}
               </p>
               <p>
+                <span className="font-semibold text-[#2a2e36]">Tenant durumu:</span>{" "}
+                {getActiveLabel(ticket.tenantIsActive)}
+              </p>
+              <p>
                 <span className="font-semibold text-[#2a2e36]">Domainler:</span>{" "}
                 {ticket.tenantDomains.join(", ") || "-"}
+              </p>
+              <p>
+                <span className="font-semibold text-[#2a2e36]">Atanan kişi:</span>{" "}
+                {ticket.assigneeName ?? "Henüz atama yapılmadı"}
               </p>
               <p>
                 <span className="font-semibold text-[#2a2e36]">Müşteri:</span>{" "}
@@ -95,11 +109,11 @@ export default async function TicketDetailPage(props: {
                   Durum
                 </label>
                 <select name="status" defaultValue={ticket.status}>
-                  <option value="new">New</option>
-                  <option value="open">Open</option>
-                  <option value="waiting_customer">Waiting customer</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
+                  <option value="new">Yeni</option>
+                  <option value="open">Açık</option>
+                  <option value="waiting_customer">Müşteri yanıtı bekleniyor</option>
+                  <option value="resolved">Çözüldü</option>
+                  <option value="closed">Kapatıldı</option>
                 </select>
               </div>
               <div>
@@ -107,12 +121,28 @@ export default async function TicketDetailPage(props: {
                   Öncelik
                 </label>
                 <select name="priority" defaultValue={ticket.priority}>
-                  <option value="low">Low</option>
+                  <option value="low">Düşük</option>
                   <option value="normal">Normal</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
+                  <option value="high">Yüksek</option>
+                  <option value="critical">Kritik</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[#4e5562]">
+                Atanan kişi
+              </label>
+              <select name="assigneeId" defaultValue={ticket.assigneeId ?? "unassigned"}>
+                <option value="unassigned">Atama yok</option>
+                {agents
+                  .filter((agent) => agent.isActive || agent.id === ticket.assigneeId)
+                  .map((agent) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.name} ({agent.email})
+                    </option>
+                  ))}
+              </select>
             </div>
 
             <div>
