@@ -14,7 +14,7 @@ import {
   sql,
 } from "drizzle-orm";
 
-import { getDb } from "@/lib/db";
+import { ensureDatabaseReady, getDb } from "@/lib/db";
 import { env, hasAdminCredentials, hasDatabase } from "@/lib/env";
 import { readInboxMessages, sendTicketReply } from "@/lib/mail";
 import { loadMockStore, saveMockStore } from "@/lib/mock-store";
@@ -67,6 +67,8 @@ function getUnassignedTenant(store: Awaited<ReturnType<typeof loadMockStore>>) {
 async function ensureDbAdminUser() {
   if (!hasDatabase || !hasAdminCredentials) return null;
 
+  await ensureDatabaseReady();
+
   const db = getDb();
   if (!db) return null;
 
@@ -100,6 +102,8 @@ export async function verifyAdminLogin(email: string, password: string) {
     }
     return null;
   }
+
+  await ensureDatabaseReady();
 
   const db = getDb();
   if (!db) return null;
@@ -144,6 +148,8 @@ export async function recordAudit(input: {
     return;
   }
 
+  await ensureDatabaseReady();
+
   const db = getDb();
   if (!db) return;
 
@@ -164,6 +170,8 @@ export async function listTenants(): Promise<TenantRecord[]> {
     const store = await loadMockStore();
     return [...store.tenants].sort((a, b) => a.name.localeCompare(b.name));
   }
+
+  await ensureDatabaseReady();
 
   const db = getDb();
   if (!db) return [];
@@ -214,6 +222,8 @@ export async function createTenant(input: {
     });
     return tenant;
   }
+
+  await ensureDatabaseReady();
 
   const db = getDb();
   if (!db) return tenant;
@@ -279,6 +289,8 @@ export async function listTickets(filters: TicketFilters): Promise<TicketListIte
     return applyFiltersToMockTickets(filters);
   }
 
+  await ensureDatabaseReady();
+
   const db = getDb();
   if (!db) return [];
 
@@ -339,6 +351,8 @@ export async function getTicketDetail(ticketId: string): Promise<TicketDetail | 
     const store = await loadMockStore();
     return store.tickets.find((ticket) => ticket.id === ticketId) ?? null;
   }
+
+  await ensureDatabaseReady();
 
   const db = getDb();
   if (!db) return null;
@@ -721,6 +735,8 @@ export async function ingestInboundMail(mail: InboundMail) {
     return ticket;
   }
 
+  await ensureDatabaseReady();
+
   const db = getDb();
   if (!db) return null;
 
@@ -908,6 +924,8 @@ export async function updateTicket(input: {
     return ticket;
   }
 
+  await ensureDatabaseReady();
+
   const db = getDb();
   if (!db) return null;
 
@@ -981,6 +999,8 @@ export async function addTicketMessage(input: {
     });
     return detail;
   }
+
+  await ensureDatabaseReady();
 
   const db = getDb();
   if (!db) return null;
@@ -1070,6 +1090,8 @@ export async function storeMonthlyReportLog(input: {
   filters: TicketFilters;
 }) {
   if (!hasDatabase) return;
+
+  await ensureDatabaseReady();
 
   const db = getDb();
   if (!db) return;
