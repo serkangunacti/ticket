@@ -60,7 +60,7 @@ export default async function AdminDashboard(props: {
   const metrics = calculateMetrics(tickets);
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-8 lg:px-10">
+    <main className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 px-6 py-8 lg:px-10">
       <section className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
@@ -150,7 +150,7 @@ export default async function AdminDashboard(props: {
         </div>
       </Surface>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.38fr)_minmax(320px,0.62fr)]">
+      <section>
         <Surface className="min-w-0 overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] p-0 shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
           <div className="flex flex-col gap-4 border-b border-[rgba(42,46,54,0.08)] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -167,19 +167,19 @@ export default async function AdminDashboard(props: {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto xl:overflow-visible">
             <table className="min-w-full text-left">
               <thead className="bg-[#f2eadf] text-xs uppercase tracking-[0.18em] text-[#7a746c]">
                 <tr>
-                  <th className="px-6 py-4">Ticket</th>
-                  <th className="px-6 py-4">Müşteri</th>
-                  <th className="px-6 py-4">Tenant</th>
-                  <th className="px-6 py-4">Atanan</th>
-                  <th className="px-6 py-4">Durum</th>
-                  <th className="px-6 py-4">Öncelik</th>
-                  <th className="px-6 py-4">İlk yanıt</th>
-                  <th className="px-6 py-4">Geliş</th>
-                  <th className="px-6 py-4 text-right">İşlem</th>
+                  <th className="px-4 py-4">Ticket</th>
+                  <th className="px-4 py-4">Müşteri</th>
+                  <th className="px-4 py-4">Tenant</th>
+                  <th className="px-4 py-4">Atanan</th>
+                  <th className="px-4 py-4">Durum</th>
+                  <th className="px-4 py-4">Öncelik</th>
+                  <th className="px-4 py-4">İlk yanıt</th>
+                  <th className="px-4 py-4">Geliş</th>
+                  <th className="px-4 py-4 text-right">İşlem</th>
                 </tr>
               </thead>
               <tbody>
@@ -196,40 +196,42 @@ export default async function AdminDashboard(props: {
                       key={ticket.id}
                       className="border-t border-[rgba(42,46,54,0.08)] transition hover:bg-[#f6efe6]"
                     >
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-5 align-top">
                         <Link href={`/ticket/admin/tickets/${ticket.id}`} className="group block">
                           <p className="font-semibold text-[#2a2e36] transition group-hover:text-[#7d6546]">
                             {ticket.ticketCode}
                           </p>
-                          <p className="mt-1 max-w-sm text-sm leading-7 text-[#5f6774]">
+                          <p className="mt-1 max-w-[18rem] text-sm leading-6 text-[#5f6774]">
                             {ticket.subject}
                           </p>
                         </Link>
                       </td>
-                      <td className="px-6 py-5 text-sm text-[#3f4652]">
+                      <td className="px-4 py-5 align-top text-sm text-[#3f4652]">
                         <p className="font-medium">{ticket.customerName ?? "İsimsiz kayıt"}</p>
-                        <p className="mt-1 text-[#6b655d]">{ticket.customerEmail}</p>
+                        <p className="mt-1 break-all text-[#6b655d]">{ticket.customerEmail}</p>
                       </td>
-                      <td className="px-6 py-5 text-sm text-[#3f4652]">{ticket.tenantName}</td>
-                      <td className="px-6 py-5 text-sm text-[#6b655d]">
+                      <td className="px-4 py-5 align-top text-sm text-[#3f4652]">
+                        {ticket.tenantName}
+                      </td>
+                      <td className="px-4 py-5 align-top text-sm text-[#6b655d]">
                         {ticket.assigneeName ?? "Atanmadı"}
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-5 align-top">
                         <StatusBadge value={ticket.status} />
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-5 align-top">
                         <PriorityBadge value={ticket.priority} />
                       </td>
-                      <td className="px-6 py-5 text-sm text-[#3f4652]">
+                      <td className="px-4 py-5 align-top text-sm text-[#3f4652]">
                         {formatDurationMinutes(firstResponseMinutes)}
                       </td>
-                      <td className="px-6 py-5 text-sm text-[#6b655d]">
+                      <td className="px-4 py-5 align-top text-sm text-[#6b655d] whitespace-nowrap">
                         {formatDateTime(ticket.firstReceivedAt)}
                       </td>
-                      <td className="px-6 py-5 text-right">
+                      <td className="px-4 py-5 align-top text-right">
                         <Link
                           href={`/ticket/admin/tickets/${ticket.id}`}
-                          className="inline-flex h-10 items-center justify-center rounded-xl border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-4 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]"
+                          className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-xl border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-4 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]"
                         >
                           Düzenle
                         </Link>
@@ -247,7 +249,9 @@ export default async function AdminDashboard(props: {
             ) : null}
           </div>
         </Surface>
+      </section>
 
+      <section className="grid gap-6 xl:grid-cols-2">
         <div className="min-w-0 space-y-6">
           <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
             <div className="flex items-center gap-3">
@@ -316,7 +320,9 @@ export default async function AdminDashboard(props: {
               ))}
             </div>
           </Surface>
+        </div>
 
+        <div className="min-w-0 space-y-6">
           <Surface className="overflow-hidden border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
             <div className="flex items-center gap-3">
               <Plus className="h-5 w-5 text-[#7d6546]" />
