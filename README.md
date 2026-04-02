@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Uptexx Ticket
 
-## Getting Started
+Mail-first çalışan, tenant bazlı filtreleme ve raporlama destekli iç kullanım ticket sistemi.
 
-First, run the development server:
+## Özellikler
+
+- `destek@uptexx.com` üzerinden gelen mailleri ticket'a dönüştürme
+- Aynı mail thread'i içinde süreç takibi
+- Şirket bazlı tenant ayrımı
+- Excel ve PDF export
+- Tek admin giriş modeli
+- TiDB Cloud Starter ile uyumlu veri katmanı
+
+## Kurulum
+
+1. Bağımlılıkları yükleyin:
+
+```bash
+npm install
+```
+
+2. Ortam değişkenlerini hazırlayın:
+
+```bash
+cp .env.example .env.local
+```
+
+3. En az şu alanları doldurun:
+
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `AUTH_SECRET`
+- `DATABASE_URL`
+
+4. İsterseniz fixture modunda mail sync ile başlayın:
+
+```bash
+MAIL_SYNC_MODE=fixtures
+```
+
+5. Geliştirme sunucusunu açın:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ardından [http://localhost:3000/ticket](http://localhost:3000/ticket) adresine gidin.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## TiDB / Drizzle
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Şema üretmek ve veritabanına göndermek için:
 
-## Learn More
+```bash
+npm run db:generate
+npm run db:push
+```
 
-To learn more about Next.js, take a look at the following resources:
+Örnek seed çalıştırmak için:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run seed
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Mail entegrasyonu
 
-## Deploy on Vercel
+İki çalışma modu vardır:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `fixtures`: `fixtures/mailbox/*.eml` dosyalarını okuyup ticket oluşturur
+- `microsoft`: Microsoft 365 shared mailbox üzerinden inbox okur
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Microsoft modu için şu alanları tanımlayın:
+
+- `M365_TENANT_ID`
+- `M365_CLIENT_ID`
+- `M365_CLIENT_SECRET`
+- `M365_SHARED_MAILBOX`
+
+## Testler
+
+```bash
+npm run lint
+npm run test
+```

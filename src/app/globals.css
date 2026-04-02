@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fbff;
+  --foreground: #08192f;
+  --accent: #05c7f2;
+  --muted: #5a6d85;
+  --panel: #ffffff;
+  --hero: #061426;
+  --hero-2: #0d2342;
+  --line: rgba(8, 25, 47, 0.1);
+  --soft: #edf4fb;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(8, 25, 47, 0.12);
+  background: white;
+  padding: 0.9rem 1rem;
+  color: #08192f;
+  outline: none;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(5, 199, 242, 0.8);
+  box-shadow: 0 0 0 4px rgba(5, 199, 242, 0.14);
+}
+
+button {
+  cursor: pointer;
+}
+
+.font-heading {
+  font-family: var(--font-heading), sans-serif;
+}
+
+.grain-overlay {
+  position: relative;
+}
+
+.grain-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0.018)),
+    radial-gradient(rgba(255, 255, 255, 0.06) 0.6px, transparent 0.6px);
+  background-size:
+    auto,
+    16px 16px;
+  mix-blend-mode: overlay;
+  opacity: 0.16;
+}
+
+.soft-grid {
+  background-image:
+    linear-gradient(to right, rgba(8, 25, 47, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(8, 25, 47, 0.05) 1px, transparent 1px);
+  background-size: 36px 36px;
 }
