@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, MessageSquareQuote, SendHorizonal } from "lucide-react";
 
+import { SubmitButton } from "@/components/submit-button";
 import { PriorityBadge, SectionLabel, StatusBadge, Surface } from "@/components/ticket-ui";
 import { listSupportAgents, getTicketDetail } from "@/lib/data";
 import { getActiveLabel } from "@/lib/labels";
@@ -15,10 +16,14 @@ export default async function TicketDetailPage(props: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await props.params;
+  const searchParams = (await props.searchParams) ?? {};
   const [ticket, agents] = await Promise.all([
     getTicketDetail(params.ticketId),
     listSupportAgents(),
   ]);
+  const updated = searchParams.updated === "1";
+  const messageSent = searchParams.message === "sent";
+  const messageError = searchParams.error === "message";
 
   if (!ticket) {
     return (
@@ -58,6 +63,21 @@ export default async function TicketDetailPage(props: {
 
       <section className="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
         <Surface className="space-y-6 border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+          {updated ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+              Ticket bilgileri güncellendi.
+            </div>
+          ) : null}
+          {messageSent ? (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+              Ticket mesajı kaydedildi.
+            </div>
+          ) : null}
+          {messageError ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900">
+              Mesaj alanı boş bırakılamaz.
+            </div>
+          ) : null}
           <div>
             <SectionLabel className="border-[#d7cdbd] bg-[#efe5d7] text-[#7d6546]">
               Ticket özeti
@@ -156,9 +176,12 @@ export default async function TicketDetailPage(props: {
                 placeholder="Yapılan işlem, kök neden, kalıcı çözüm"
               />
             </div>
-            <button className="w-full rounded-full bg-[#2f3a49] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#24303e]">
+            <SubmitButton
+              pendingText="Güncelleniyor..."
+              className="w-full rounded-full bg-[#2f3a49] px-5 py-3 text-sm font-semibold text-white hover:bg-[#24303e]"
+            >
               Ticket güncelle
-            </button>
+            </SubmitButton>
           </form>
 
           <form
@@ -177,20 +200,22 @@ export default async function TicketDetailPage(props: {
               />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <button
+              <SubmitButton
                 name="direction"
                 value="outbound"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8dc7d6] px-5 py-3 text-sm font-semibold text-[#102235] transition hover:bg-[#a7d7e3]"
+                pendingText="Gönderiliyor..."
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8dc7d6] px-5 py-3 text-sm font-semibold text-[#102235] hover:bg-[#a7d7e3]"
               >
                 <SendHorizonal className="h-4 w-4" /> Müşteriye mail gönder
-              </button>
-              <button
+              </SubmitButton>
+              <SubmitButton
                 name="direction"
                 value="internal"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-5 py-3 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#eadfce]"
+                pendingText="Kaydediliyor..."
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-5 py-3 text-sm font-semibold text-[#2a2e36] hover:bg-[#eadfce]"
               >
                 <MessageSquareQuote className="h-4 w-4" /> İç not ekle
-              </button>
+              </SubmitButton>
             </div>
           </form>
         </Surface>
