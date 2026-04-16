@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import os from "node:os";
 
 import {
   mockCustomers,
@@ -32,7 +33,11 @@ export type MockStore = {
   auditLogs: AuditEntry[];
 };
 
-const STORE_DIR = path.join(process.cwd(), ".data");
+const DEFAULT_STORE_DIR = process.env.MOCK_STORE_DIR ?? path.join(os.tmpdir(), "uptexx-mock-store");
+const STORE_DIR =
+  process.env.NODE_ENV === "production"
+    ? DEFAULT_STORE_DIR
+    : path.join(process.cwd(), ".data");
 const STORE_FILE = path.join(STORE_DIR, "mock-store.json");
 
 function createInitialStore(): MockStore {
