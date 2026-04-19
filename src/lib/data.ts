@@ -34,6 +34,7 @@ import {
 } from "@/lib/schema";
 import { collectThreadCandidates } from "@/lib/threading";
 import type {
+  AuditLogRecord,
   CustomerRecord,
   InboundMail,
   SupportAgentRecord,
@@ -114,7 +115,23 @@ async function ensureDbAdminUser() {
     .where(eq(adminUsers.email, env.ADMIN_EMAIL!))
     .limit(1);
 
-  if (existing[0]) return existing[0];
+  if (existing[0]) {
+    const passwordHash = await hash(env.ADMIN_PASSWORD!, 10);
+
+    await db
+      .update(adminUsers)
+      .set({
+        passwordHash,
+        updatedAt: now(),
+      })
+      .where(eq(adminUsers.id, existing[0].id));
+
+    return {
+      ...existing[0],
+      passwordHash,
+      updatedAt: now(),
+    };
+  }
 
   const admin = {
     id: randomUUID(),
@@ -178,8 +195,7 @@ async function ensureDefaultSupportAgent() {
   const createdAt = now();
 
   if (existing[0]) {
-    const passwordHash =
-      existing[0].passwordHash ?? (await hash(env.ADMIN_PASSWORD!, 10));
+    const passwordHash = await hash(env.ADMIN_PASSWORD!, 10);
     await db
       .update(supportAgents)
       .set({
@@ -227,6 +243,7 @@ async function ensureDefaultSupportAgent() {
 export async function verifyAdminLogin(email: string, password: string) {
   if (!hasAdminCredentials) return null;
 
+  await ensureDbAdminUser();
   await ensureDefaultSupportAgent();
 
   if (!hasDatabase) {
@@ -311,6 +328,37 @@ export async function recordAudit(input: {
     meta: input.meta ?? null,
     createdAt: now(),
   });
+}
+
+export async function listAuditLogs(limit = 8): Promise<AuditLogRecord[]> {
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    return [...store.auditLogs]
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
+      .slice(0, limit);
+  }
+
+  await ensureDatabaseReady();
+
+  const db = getDb();
+  if (!db) return [];
+
+  const rows = await db
+    .select()
+    .from(auditLogs)
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(limit);
+
+  return rows.map((entry) => ({
+    id: entry.id,
+    adminEmail: entry.adminEmail,
+    action: entry.action,
+    entityType: entry.entityType,
+    entityId: entry.entityId,
+    summary: entry.summary,
+    createdAt: entry.createdAt,
+    meta: (entry.meta as Record<string, unknown> | null | undefined) ?? null,
+  }));
 }
 
 export async function listTenants(): Promise<TenantRecord[]> {

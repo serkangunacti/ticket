@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { Download, Filter, MailOpen, Plus } from "lucide-react";
+import { AlertTriangle, Clock3, Download, Filter, MailOpen, Plus } from "lucide-react";
 
 import { SubmitButton } from "@/components/submit-button";
 import { MetricTile, PriorityBadge, StatusBadge, Surface } from "@/components/ticket-ui";
 import { requireAdminSession } from "@/lib/auth";
+import { hasDatabase } from "@/lib/env";
 import { getActiveLabel, getRoleLabel } from "@/lib/labels";
 import { calculateMetrics } from "@/lib/reports";
-import { listSupportAgents, listTenants, listTickets } from "@/lib/data";
-import type { TicketFilters } from "@/lib/types";
+import { listAuditLogs, listSupportAgents, listTenants, listTickets } from "@/lib/data";
+import type { TicketFilters, TicketListItem } from "@/lib/types";
 import { formatDateTime, formatDurationMinutes } from "@/lib/utils";
 
 import {
@@ -24,19 +25,45 @@ const primaryButtonClass =
 const secondaryButtonClass =
   "inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] px-4 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#efe5d7]";
 
+const openStatuses = new Set(["new", "open", "waiting_customer"]);
+
+type SearchParamMap = Record<string, string | string[] | undefined>;
+
+type AttentionSignal = {
+  reason: string;
+  detail: string;
+  score: number;
+};
+
+type AttentionItem = AttentionSignal & {
+  ticketId: string;
+  ticketCode: string;
+  subject: string;
+  tenantName: string;
+  priority: TicketListItem["priority"];
+  status: TicketListItem["status"];
+};
+
+type AttentionSummary = {
+  items: AttentionItem[];
+  totalCount: number;
+};
+
+function getSearchParamValue(searchParams: SearchParamMap, key: string) {
+  const value = searchParams[key];
+  return typeof value === "string" ? value : undefined;
+}
+
 function getFilters(
-  searchParams: Record<string, string | string[] | undefined>,
+  searchParams: SearchParamMap,
 ): TicketFilters {
   return {
-    tenantId: typeof searchParams.tenantId === "string" ? searchParams.tenantId : undefined,
-    status: typeof searchParams.status === "string" ? (searchParams.status as TicketFilters["status"]) : undefined,
-    priority:
-      typeof searchParams.priority === "string"
-        ? (searchParams.priority as TicketFilters["priority"])
-        : undefined,
-    query: typeof searchParams.query === "string" ? searchParams.query : undefined,
-    from: typeof searchParams.from === "string" ? searchParams.from : undefined,
-    to: typeof searchParams.to === "string" ? searchParams.to : undefined,
+    tenantId: getSearchParamValue(searchParams, "tenantId"),
+    status: getSearchParamValue(searchParams, "status") as TicketFilters["status"],
+    priority: getSearchParamValue(searchParams, "priority") as TicketFilters["priority"],
+    query: getSearchParamValue(searchParams, "query"),
+    from: getSearchParamValue(searchParams, "from"),
+    to: getSearchParamValue(searchParams, "to"),
   };
 }
 
@@ -49,24 +76,114 @@ function buildReportQuery(filters: TicketFilters, format: "xlsx" | "pdf") {
   return `/api/reports/export?${params.toString()}`;
 }
 
+function getAttentionSignal(ticket: TicketListItem, nowTime: number): AttentionSignal | null {
+  if (!openStatuses.has(ticket.status)) {
+    return null;
+  }
+
+  const ageMinutes = Math.max(
+    0,
+    Math.round((nowTime - ticket.firstReceivedAt.getTime()) / 60000),
+  );
+  const idleMinutes = Math.max(
+    0,
+    Math.round((nowTime - ticket.lastActivityAt.getTime()) / 60000),
+  );
+  const isHighPriority = ticket.priority === "critical" || ticket.priority === "high";
+
+  if (!ticket.assigneeId) {
+    return {
+      reason: "Atama bekliyor",
+      detail: `${formatDurationMinutes(ageMinutes)} önce açıldı`,
+      score: isHighPriority ? 120 : 100,
+    };
+  }
+
+  if (isHighPriority && !ticket.firstResponseAt && ageMinutes >= 30) {
+    return {
+      reason: "İlk yanıt gecikiyor",
+      detail: `${formatDurationMinutes(ageMinutes)} boyunca ilk yanıt verilmedi`,
+      score: ticket.priority === "critical" ? 110 : 90,
+    };
+  }
+
+  if (ticket.status === "waiting_customer" && idleMinutes >= 48 * 60) {
+    return {
+      reason: "Takip gerekiyor",
+      detail: `${formatDurationMinutes(idleMinutes)} önce son hareket alındı`,
+      score: 80,
+    };
+  }
+
+  if ((ticket.status === "new" || ticket.status === "open") && idleMinutes >= 24 * 60) {
+    return {
+      reason: "Uzun süredir hareketsiz",
+      detail: `${formatDurationMinutes(idleMinutes)} önce güncellendi`,
+      score: 70,
+    };
+  }
+
+  return null;
+}
+
+function buildAttentionSummary(tickets: TicketListItem[]): AttentionSummary {
+  const nowTime = Date.now();
+
+  const items = tickets
+    .map((ticket) => {
+      const signal = getAttentionSignal(ticket, nowTime);
+      if (!signal) return null;
+
+      return {
+        ...signal,
+        ticketId: ticket.id,
+        ticketCode: ticket.ticketCode,
+        subject: ticket.subject,
+        tenantName: ticket.tenantName,
+        priority: ticket.priority,
+        status: ticket.status,
+      } satisfies AttentionItem;
+    })
+    .filter((item): item is AttentionItem => item !== null)
+    .sort((left, right) => right.score - left.score);
+
+  return {
+    items: items.slice(0, 6),
+    totalCount: items.length,
+  };
+}
+
 export default async function AdminDashboard(props: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const searchParams = (await props.searchParams) ?? {};
   const session = await requireAdminSession();
   const filters = getFilters(searchParams);
-  const [tenants, tickets, agents] = await Promise.all([
+  const [tenants, tickets, agents, auditLogs] = await Promise.all([
     listTenants(),
     listTickets(filters),
     listSupportAgents(),
+    listAuditLogs(8),
   ]);
   const metrics = calculateMetrics(tickets);
+  const openTickets = tickets.filter((ticket) => openStatuses.has(ticket.status));
+  const attentionSummary = buildAttentionSummary(tickets);
+  const attentionItems = attentionSummary.items;
+  const attentionTicketCount = attentionSummary.totalCount;
+  const unassignedOpenCount = openTickets.filter((ticket) => !ticket.assigneeId).length;
   const canManageTenants = session.role === "owner" || session.role === "manager";
   const canManageTeam = session.role === "owner";
-  const tenantCreated = searchParams.tenant === "created";
-  const agentCreated = searchParams.agent === "created";
-  const tenantCreateError = searchParams.error === "tenant";
-  const agentCreateError = searchParams.error === "agent";
+  const tenantEvent = getSearchParamValue(searchParams, "tenant");
+  const agentEvent = getSearchParamValue(searchParams, "agent");
+  const syncEvent = getSearchParamValue(searchParams, "sync");
+  const syncScanned = Number(getSearchParamValue(searchParams, "scanned") ?? 0);
+  const pageError = getSearchParamValue(searchParams, "error");
+  const tenantCreated = tenantEvent === "created";
+  const agentCreated = agentEvent === "created";
+  const tenantUpdated = tenantEvent === "updated";
+  const agentUpdated = agentEvent === "updated";
+  const tenantCreateError = pageError === "tenant";
+  const agentCreateError = pageError === "agent";
 
   return (
     <main className="mx-auto flex w-full max-w-[1480px] flex-col gap-6 px-6 py-8 lg:px-10">
@@ -94,9 +211,11 @@ export default async function AdminDashboard(props: {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <MetricTile label="Toplam ticket" value={metrics.totalTickets} />
         <MetricTile label="Açık ticket" value={metrics.openTickets} />
+        <MetricTile label="Kapanan ticket" value={metrics.closedTickets} />
+        <MetricTile label="Atama bekleyen" value={unassignedOpenCount} />
         <MetricTile
           label="İlk yanıt ort."
           value={formatDurationMinutes(metrics.averageFirstResponseMinutes)}
@@ -105,6 +224,131 @@ export default async function AdminDashboard(props: {
           label="Çözüm ort."
           value={formatDurationMinutes(metrics.averageResolutionMinutes)}
         />
+      </section>
+
+      {!hasDatabase ? (
+        <section className="rounded-[24px] border border-amber-300 bg-amber-50 px-5 py-4 text-sm text-amber-950">
+          <p className="font-semibold">Mock mode aktif: kayitlar kalici degil.</p>
+          <p className="mt-1 leading-7">
+            `DATABASE_URL` tanimlanmadigi icin uygulama gecici store ile calisiyor.
+            TiDB baglantisini kurup `npm run db:init` calistirdiginizda ticket, tenant ve ekip kayitlari kalici olarak veritabaninda tutulur.
+          </p>
+        </section>
+      ) : null}
+
+      {syncEvent === "done" || tenantUpdated || agentUpdated ? (
+        <section className="space-y-3">
+          {syncEvent === "done" ? (
+            <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-950">
+              <p className="font-semibold">Mail senkronizasyonu tamamlandı.</p>
+              <p className="mt-1 leading-7">
+                Inbox içinde {syncScanned} ileti kontrol edildi ve dashboard verileri yenilendi.
+              </p>
+            </div>
+          ) : null}
+          {tenantUpdated ? (
+            <div className="rounded-[24px] border border-cyan-200 bg-cyan-50 px-5 py-4 text-sm text-cyan-950">
+              Tenant durumu güncellendi.
+            </div>
+          ) : null}
+          {agentUpdated ? (
+            <div className="rounded-[24px] border border-cyan-200 bg-cyan-50 px-5 py-4 text-sm text-cyan-950">
+              Ekip üyesi durumu güncellendi.
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+        <Surface className="border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-1 h-5 w-5 text-[#7d6546]" />
+              <div>
+                <h2 className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
+                  Öncelikli aksiyonlar
+                </h2>
+                <p className="mt-1 text-sm leading-7 text-[#6b655d]">
+                  Mevcut filtrelerde {attentionTicketCount} ticket için operasyon aksiyonu gerekiyor.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-full bg-[#efe5d7] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#7d6546]">
+              {attentionItems.length} görünüm
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {attentionItems.length ? (
+              attentionItems.map((item) => (
+                <Link
+                  key={item.ticketId}
+                  href={`/ticket/admin/tickets/${item.ticketId}`}
+                  className="block rounded-[24px] border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-5 py-4 transition hover:bg-[#eadfce]"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#2a2e36]">
+                        {item.ticketCode} · {item.reason}
+                      </p>
+                      <p className="mt-1 text-sm leading-7 text-[#3f4652]">{item.subject}</p>
+                      <p className="mt-1 text-sm text-[#6b655d]">
+                        {item.tenantName} · {item.detail}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge value={item.status} />
+                      <PriorityBadge value={item.priority} />
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="rounded-[24px] border border-dashed border-[rgba(42,46,54,0.14)] bg-[#fffaf2] px-5 py-8 text-sm leading-7 text-[#6b655d]">
+                Seçili filtrelerde acil aksiyon gerektiren ticket görünmüyor.
+              </div>
+            )}
+          </div>
+        </Surface>
+
+        <Surface className="border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
+          <div className="flex items-start gap-3">
+            <Clock3 className="mt-1 h-5 w-5 text-[#7d6546]" />
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
+                Son işlemler
+              </h2>
+              <p className="mt-1 text-sm leading-7 text-[#6b655d]">
+                Tenant, ekip ve ticket hareketleri burada kronolojik görünür.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {auditLogs.length ? (
+              auditLogs.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="rounded-[24px] border border-[rgba(42,46,54,0.08)] bg-[#f6efe6] px-5 py-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-[#2a2e36]">{entry.summary}</p>
+                    <span className="rounded-full bg-[#fffaf2] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#8a6d4b]">
+                      {entry.action}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-7 text-[#6b655d]">
+                    {entry.adminEmail} · {formatDateTime(entry.createdAt)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[24px] border border-dashed border-[rgba(42,46,54,0.14)] bg-[#fffaf2] px-5 py-8 text-sm leading-7 text-[#6b655d]">
+                Henüz kaydedilmiş işlem bulunmuyor.
+              </div>
+            )}
+          </div>
+        </Surface>
       </section>
 
       {canManageTenants || canManageTeam ? (

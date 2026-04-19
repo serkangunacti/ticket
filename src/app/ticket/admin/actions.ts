@@ -176,9 +176,13 @@ export async function updateSupportAgentAction(formData: FormData) {
 
 export async function syncMailboxAction() {
   await requireAdminSession();
-  await syncInbox();
+  const result = await syncInbox();
   revalidatePath("/ticket/admin");
-  redirect("/ticket/admin?sync=done");
+  const params = new URLSearchParams({
+    sync: "done",
+    scanned: String(result.count),
+  });
+  redirect(`/ticket/admin?${params.toString()}`);
 }
 
 export async function updateTicketAction(formData: FormData) {

@@ -129,3 +129,14 @@ export type ReportMetrics = {
   averageFirstResponseMinutes: number | null;
   averageResolutionMinutes: number | null;
 };
+
+export type AuditLogRecord = {
+  id: string;
+  adminEmail: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  summary: string;
+  createdAt: Date;
+  meta?: Record<string, unknown> | null;
+};
