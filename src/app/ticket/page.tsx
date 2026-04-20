@@ -639,156 +639,125 @@ export default function TicketLandingPage() {
         </div>
       </section>
 
-      <section id="paketler" className="relative overflow-hidden bg-[linear-gradient(180deg,#08111d_0%,#0d1b2c_52%,#12263d_100%)] py-24 text-white">
-        <div className="ticket-ambient-grid pointer-events-none absolute inset-0 opacity-30" />
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute left-[-7rem] top-[4.5rem] h-72 w-72 rounded-full bg-[#5de0ff]/10 blur-3xl" />
-          <div className="absolute right-[-8rem] bottom-10 h-96 w-96 rounded-full bg-[#2a63ff]/10 blur-3xl" />
-        </div>
-
+      <section id="paketler" className="bg-[#f3f6f8] py-24">
         <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
-          <div className="grid gap-12 xl:grid-cols-[0.8fr_1.2fr]">
-            <div className="ticket-reveal xl:sticky xl:top-24 xl:self-start">
-              <SectionLabel className="border-white/12 bg-white/8 text-[#8fe9ff]">
-                Uptexx Destek Paketleri
-              </SectionLabel>
-              <h2 className="mt-6 max-w-xl text-3xl font-semibold tracking-tight text-white md:text-[3.2rem] md:leading-[1.02]">
-                Kurumsal destek akışınıza uygun üç net yapı.
-              </h2>
-              <p className="mt-5 max-w-xl text-base leading-8 text-[#bdd0e0] md:text-lg">
-                Bu alan fiyat tablosu gibi değil, kurumsal karar ekranı gibi hissettirmeli.
-                Her paket aynı omurgayı korur; fark, hacim, ekip modeli ve canlıya geçiş
-                derinliğinde oluşur.
-              </p>
+          <div className="ticket-reveal max-w-3xl">
+            <SectionLabel className="border-[#d7e7ef] bg-[#edf7fb] text-[#256985]">
+              Uptexx Destek Paketleri
+            </SectionLabel>
+            <h2 className="mt-6 text-3xl font-semibold tracking-tight text-[#16202a] md:text-4xl">
+              Kurumsal ihtiyaçlara göre netleşen üç destek planı.
+            </h2>
+            <p className="mt-5 text-base leading-8 text-[#607285] md:text-lg">
+              Paketler aynı ürün omurgasını paylaşır. Fark; operasyon hacmi, devreye alma
+              modeli ve raporlama derinliğinde oluşur. Yapı standarttır, karar vermesi
+              kolaydır.
+            </p>
+          </div>
 
-              <div className="mt-8 space-y-4">
-                {[
-                  {
-                    title: "Tek omurga, farklı ölçek",
-                    body: "Mail-first akış ve tenant mantığı korunur; yalnızca operasyon derinliği büyür.",
-                  },
-                  {
-                    title: "Kurumsal görünürlük",
-                    body: "Raporlama ve audit katmanı, ekip içi düzen ile müşteri görünürlüğünü aynı zeminde toplar.",
-                  },
-                  {
-                    title: "Kontrollü canlıya geçiş",
-                    body: "Başlangıç kurulumundan enterprise fazına kadar aynı ürün mantığı bozulmadan ilerler.",
-                  },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
-                    <p className="text-sm font-semibold text-white">{item.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-[#b7cada]">{item.body}</p>
+          <div className="mt-12 grid gap-6 xl:grid-cols-3">
+            {packageTiers.map((tier, index) => (
+              <article
+                key={tier.name}
+                className={`ticket-reveal flex h-full flex-col rounded-[28px] border bg-white p-7 shadow-[0_18px_44px_rgba(8,25,47,0.06)] ${
+                  tier.highlight
+                    ? "border-[#256985]/24 shadow-[0_24px_60px_rgba(20,59,103,0.10)]"
+                    : "border-[#d8e3ea]"
+                }`}
+                style={{ animationDelay: `${120 + index * 70}ms` }}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#607285]">
+                      {tier.eyebrow}
+                    </p>
+                    <h3 className="mt-3 text-[2rem] font-semibold tracking-tight text-[#16202a]">
+                      {tier.name}
+                    </h3>
                   </div>
-                ))}
-              </div>
+                  {tier.highlight ? (
+                    <span className="rounded-full border border-[#d3e8f0] bg-[#edf7fb] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#256985]">
+                      Önerilen
+                    </span>
+                  ) : null}
+                </div>
 
-              <div className="mt-8 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.03)_100%)] p-5 shadow-[0_18px_50px_rgba(4,12,22,0.18)]">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[#8fe9ff]">
-                  Tüm planlarda
-                </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {packageSharedInclusions.map((item) => (
-                    <div key={item} className="rounded-[18px] border border-white/8 bg-white/[0.04] px-4 py-3 text-sm text-[#d7e4ef]">
-                      {item}
+                <p className="mt-4 text-sm leading-7 text-[#607285]">{tier.summary}</p>
+
+                <div className="mt-6 rounded-[20px] border border-[#e1eaf0] bg-[#f8fbfc] p-4">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
+                    Operasyon ölçeği
+                  </p>
+                  <p className="mt-2 text-base font-semibold leading-7 text-[#16202a]">
+                    {tier.capacity}
+                  </p>
+                </div>
+
+                <dl className="mt-6 space-y-4 border-t border-[#e6eef3] pt-6">
+                  <div>
+                    <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
+                      Hedef kullanım
+                    </dt>
+                    <dd className="mt-2 text-sm leading-7 text-[#16202a]">{tier.audience}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
+                      Canlıya geçiş
+                    </dt>
+                    <dd className="mt-2 text-sm leading-7 text-[#16202a]">{tier.onboarding}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
+                      Raporlama
+                    </dt>
+                    <dd className="mt-2 text-sm leading-7 text-[#16202a]">{tier.reporting}</dd>
+                  </div>
+                </dl>
+
+                <div className="mt-6 flex-1 space-y-3 border-t border-[#e6eef3] pt-6">
+                  {tier.features.map((feature) => (
+                    <div key={feature} className="flex items-start gap-3 text-sm text-[#425466]">
+                      <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#256985]" />
+                      <span className="leading-6">{feature}</span>
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
 
-            <div className="space-y-6">
-              {packageTiers.map((tier, index) => (
-                <article
-                  key={tier.name}
-                  className={`ticket-reveal overflow-hidden rounded-[30px] border shadow-[0_26px_80px_rgba(4,12,22,0.18)] backdrop-blur-xl ${
+                <a
+                  href="https://www.uptexx.com/iletisim"
+                  className={`mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${
                     tier.highlight
-                      ? "border-[#8fe9ff]/34 bg-[linear-gradient(180deg,#102742_0%,#14355a_48%,#0d2036_100%)]"
-                      : "border-white/10 bg-[linear-gradient(180deg,rgba(13,26,41,0.96)_0%,rgba(9,20,33,0.98)_100%)]"
+                      ? "bg-[#256985] text-white hover:bg-[#1d526d]"
+                      : "bg-[#16202a] text-white hover:bg-[#223140]"
                   }`}
-                  style={{ animationDelay: `${120 + index * 80}ms` }}
                 >
-                  <div className="grid lg:grid-cols-[0.74fr_1.26fr]">
-                    <div className={`p-7 lg:border-r ${tier.highlight ? "border-white/12 bg-[linear-gradient(180deg,rgba(143,233,255,0.08)_0%,rgba(255,255,255,0.02)_100%)]" : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,rgba(255,255,255,0.01)_100%)]"}`}>
-                      <div className="flex items-center justify-between gap-4">
-                        <p className={`text-[0.68rem] font-semibold uppercase tracking-[0.24em] ${tier.highlight ? "text-[#8fe9ff]" : "text-[#6ed3ef]"}`}>
-                          {tier.eyebrow}
-                        </p>
-                        {tier.highlight ? (
-                          <span className="rounded-full border border-[#8fe9ff]/24 bg-[#8fe9ff]/10 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
-                            önerilen
-                          </span>
-                        ) : null}
-                      </div>
+                  {tier.cta} <ArrowRight className="h-4 w-4" />
+                </a>
+              </article>
+            ))}
+          </div>
 
-                      <h3 className="mt-6 text-[2rem] font-semibold tracking-tight text-white">
-                        {tier.name}
-                      </h3>
-                      <p className="mt-3 text-sm leading-7 text-[#c8d7e4]">
-                        {tier.summary}
-                      </p>
-
-                      <div className="mt-6 rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
-                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
-                          operasyon ölçeği
-                        </p>
-                        <p className="mt-3 text-base font-semibold leading-7 text-white">
-                          {tier.capacity}
-                        </p>
-                      </div>
-
-                      <a
-                        href="https://www.uptexx.com/iletisim"
-                        className={`mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${
-                          tier.highlight
-                            ? "bg-[linear-gradient(135deg,#8fe9ff_0%,#56cce9_52%,#2b7fda_100%)] text-[#08131f] shadow-[0_18px_40px_rgba(86,204,233,0.28)]"
-                            : "border border-[#2b4f72] bg-[linear-gradient(135deg,#12304d_0%,#0d2136_100%)] text-white hover:border-[#67d7f5]/34 hover:bg-[linear-gradient(135deg,#163c60_0%,#10253f_100%)]"
-                        }`}
-                      >
-                        {tier.cta} <ArrowRight className="h-4 w-4" />
-                      </a>
-                    </div>
-
-                    <div className="p-7">
-                      <div className="grid gap-4 md:grid-cols-3">
-                        <div>
-                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#6ed3ef]">
-                            hedef kullanım
-                          </p>
-                          <p className="mt-3 text-sm leading-7 text-[#d6e2ec]">
-                            {tier.audience}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#6ed3ef]">
-                            canlıya geçiş
-                          </p>
-                          <p className="mt-3 text-sm leading-7 text-[#d6e2ec]">
-                            {tier.onboarding}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#6ed3ef]">
-                            raporlama
-                          </p>
-                          <p className="mt-3 text-sm leading-7 text-[#d6e2ec]">
-                            {tier.reporting}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-7 grid gap-3 md:grid-cols-2">
-                        {tier.features.map((feature) => (
-                          <div key={feature} className="flex items-start gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] p-4 text-sm text-[#d7e4ef]">
-                            <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#8fe9ff]" />
-                            <span className="leading-6">{feature}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+          <div className="ticket-reveal mt-8 rounded-[28px] border border-[#dbe5eb] bg-white p-6 shadow-[0_16px_38px_rgba(8,25,47,0.05)]">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-sm">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#607285]">
+                  Tüm planlarda
+                </p>
+                <p className="mt-3 text-sm leading-7 text-[#607285]">
+                  Her pakette aynı temel ürün yapısı korunur; fark, hizmet derinliği ve
+                  organizasyon modelindedir.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {packageSharedInclusions.map((item) => (
+                  <div
+                    key={item}
+                    className="rounded-full border border-[#dbe5eb] bg-[#f8fbfc] px-4 py-2 text-sm text-[#425466]"
+                  >
+                    {item}
                   </div>
-                </article>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
