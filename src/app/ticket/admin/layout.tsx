@@ -14,38 +14,43 @@ export default async function AdminLayout({
   const session = await requireAdminSession();
 
   return (
-    <div className="min-h-screen bg-[#f4eee5] text-[#2a2e36]">
-      <header className="border-b border-[rgba(42,46,54,0.08)] bg-[#f8f2e9]/92 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:px-10">
-          <div>
-            <Link href="/ticket/admin" className="text-2xl font-semibold tracking-tight text-[#2a2e36]">
-              Uptexx Ticket
-            </Link>
-            <p className="mt-1 text-sm text-[#6b655d]">
+    <div className="min-h-screen text-[#102038]">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[linear-gradient(135deg,#071526_0%,#0f2745_58%,#163b66_100%)] text-white shadow-[0_18px_40px_rgba(7,21,38,0.2)] backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-sm font-semibold tracking-[0.26em] text-[#8de7ff]">
+              UX
+            </div>
+            <div>
+              <Link href="/ticket/admin" className="text-2xl font-semibold tracking-tight text-white">
+                Uptexx Ticket
+              </Link>
+              <p className="mt-1 text-sm text-[#c1d5eb]">
               {session.email} ile giriş yapıldı • {getRoleLabel(session.role)}
-            </p>
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#efe5d7] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#6b655d]">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#c1d5eb]">
               DB {hasDatabase ? "TiDB ready" : "mock mode"}
             </span>
-            <span className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#efe5d7] px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#6b655d]">
+            <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#c1d5eb]">
               Mail {hasMicrosoftMail ? "Microsoft" : env.MAIL_SYNC_MODE}
             </span>
             <form action={syncMailboxAction}>
-              <button className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] px-4 py-2 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#efe5d7]">
+              <button className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/14">
                 Mail senkronize et
               </button>
             </form>
             <Link
               href="/ticket/admin/account"
-              className="rounded-full border border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] px-4 py-2 text-sm font-semibold text-[#2a2e36] transition hover:bg-[#efe5d7]"
+              className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/14"
             >
               Hesabım
             </Link>
             <form action={logoutAction}>
-              <button className="rounded-full bg-[#2f3a49] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#24303e]">
+              <button className="rounded-full bg-[#37c2e8] px-4 py-2 text-sm font-semibold text-[#071526] transition hover:bg-[#5fd3f0]">
                 Çıkış yap
               </button>
             </form>

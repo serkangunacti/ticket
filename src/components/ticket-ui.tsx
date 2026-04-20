@@ -33,7 +33,7 @@ export function Surface({
   return (
     <div
       className={cn(
-        "rounded-[28px] border border-[color:var(--line)] bg-[color:var(--panel)] p-6 shadow-[0_24px_80px_rgba(8,25,47,0.08)]",
+        "rounded-[26px] border border-[color:var(--line)] bg-[color:var(--panel)] p-5 shadow-[0_18px_48px_rgba(8,25,47,0.08)] backdrop-blur-xl",
         className,
       )}
     >
@@ -93,14 +93,15 @@ export function MetricTile({
   hint?: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[rgba(15,23,42,0.08)] bg-[#f7fafc] p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#64748b]">
+    <div className="rounded-[24px] border border-[rgba(17,35,60,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(243,248,252,0.96)_100%)] p-4 shadow-[0_12px_30px_rgba(8,25,47,0.05)]">
+      <div className="mb-3 h-1.5 w-14 rounded-full bg-[linear-gradient(90deg,#37c2e8,#143b67)]" />
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-[#607287]">
         {label}
       </p>
-      <p className="mt-3 text-3xl font-semibold tracking-tight text-[#18212c]">
+      <p className="mt-2 text-[2rem] font-semibold tracking-tight text-[#102038]">
         {value}
       </p>
-      {hint ? <p className="mt-2 text-sm text-[#64748b]">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs leading-6 text-[#64748b]">{hint}</p> : null}
     </div>
   );
 }
