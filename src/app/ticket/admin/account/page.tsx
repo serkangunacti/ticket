@@ -1,10 +1,30 @@
-import { Surface } from "@/components/ticket-ui";
-import { requireAdminSession } from "@/lib/auth";
-import { getRoleLabel } from "@/lib/labels";
+import Link from "next/link";
+import { Building2, KeyRound, Plus, Shield, Users } from "lucide-react";
 
-import { changePasswordAction } from "../actions";
+import { SubmitButton } from "@/components/submit-button";
+import { requireAdminSession } from "@/lib/auth";
+import { getActiveLabel, getRoleLabel } from "@/lib/labels";
+import { listSupportAgents, listTenants } from "@/lib/data";
+
+import {
+  changePasswordAction,
+  createSupportAgentAction,
+  createTenantAction,
+  resetAgentPasswordAction,
+  toggleSupportAgentStateAction,
+  toggleTenantStateAction,
+} from "../actions";
 
 export const dynamic = "force-dynamic";
+
+const btnPrimary =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#102b4d_0%,#173d67_100%)] px-4 text-sm font-semibold text-white transition hover:shadow-[0_8px_20px_rgba(7,21,38,0.16)]";
+const btnSecondary =
+  "inline-flex h-9 items-center justify-center rounded-xl border border-[rgba(17,35,60,0.1)] bg-white/80 px-3 text-xs font-semibold text-[#102038] transition hover:bg-white hover:shadow-sm";
+const cardClass =
+  "rounded-2xl border border-[rgba(17,35,60,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(246,249,252,0.96)_100%)] p-5 shadow-[0_12px_28px_rgba(8,25,47,0.06)]";
+const inputClass =
+  "h-10 w-full rounded-xl border border-[rgba(17,35,60,0.12)] bg-white px-3 text-sm text-[#102038] outline-none transition focus:border-[#37c2e8]/40 focus:ring-1 focus:ring-[#37c2e8]/20";
 
 export default async function AccountPage(props: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -13,57 +33,287 @@ export default async function AccountPage(props: {
   const searchParams = (await props.searchParams) ?? {};
   const updated = searchParams.updated === "1";
   const hasError = searchParams.error === "password";
+  const resetError = searchParams.error === "reset";
+  const resetDone = searchParams.reset === "1";
+  const tenantCreated = searchParams.tenant === "created";
+  const tenantUpdated = searchParams.tenant === "updated";
+  const tenantError = searchParams.error === "tenant";
+  const agentCreated = searchParams.agent === "created";
+  const agentUpdated = searchParams.agent === "updated";
+  const agentError = searchParams.error === "agent";
+
+  const isOwner = session.role === "owner";
+  const isManager = session.role === "manager";
+  const canManageTeam = isOwner;
+  const canManageTenants = isOwner || isManager;
+
+  const [tenants, agents] = await Promise.all([
+    canManageTenants ? listTenants() : Promise.resolve([]),
+    canManageTeam ? listSupportAgents() : Promise.resolve([]),
+  ]);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10 lg:px-10">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#8a6d4b]">
-          Hesabım
-        </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-[#2a2e36]">
-          Şifre ve hesap bilgileri
-        </h1>
-        <p className="mt-3 text-sm leading-7 text-[#6b655d]">
-          {session.email} hesabı ile giriş yaptınız. Rolünüz: {getRoleLabel(session.role)}.
-        </p>
+    <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+      {/* Page header */}
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d9f6ff_0%,#eef6fb_100%)] text-[#133961]">
+          <Building2 className="h-5 w-5" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#102038]">
+            Şirketim
+          </h1>
+          <p className="mt-0.5 text-sm text-[#607287]">
+            {session.email} · {getRoleLabel(session.role)}
+          </p>
+        </div>
       </div>
 
-      <Surface className="border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
-        {updated ? (
-          <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-            Şifreniz güncellendi.
-          </div>
-        ) : null}
-        {hasError ? (
-          <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900">
-            Şifre değişikliği başarısız oldu. Mevcut şifreyi kontrol edin.
-          </div>
-        ) : null}
+      {/* Success / error notifications */}
+      {updated ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+          Şifreniz güncellendi. Lütfen tekrar giriş yapın.
+        </div>
+      ) : null}
+      {resetDone ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+          Üye şifresi başarıyla sıfırlandı.
+        </div>
+      ) : null}
+      {tenantCreated ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+          Tenant oluşturuldu.
+        </div>
+      ) : null}
+      {agentCreated ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+          Ekip üyesi oluşturuldu ve davet akışı başlatıldı.
+        </div>
+      ) : null}
+      {tenantUpdated || agentUpdated ? (
+        <div className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-medium text-cyan-900">
+          Kayıt güncellendi.
+        </div>
+      ) : null}
 
-        <form action={changePasswordAction} className="grid gap-5">
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-[#4e5562]">
-              Mevcut şifre
-            </label>
-            <input name="currentPassword" type="password" required />
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        {/* ── Password change (everyone) ─────────────── */}
+        <div className={cardClass}>
+          <div className="mb-4 flex items-center gap-2.5">
+            <KeyRound className="h-4 w-4 text-[#37c2e8]" />
+            <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+              Şifremi değiştir
+            </h2>
           </div>
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-[#4e5562]">
-              Yeni şifre
-            </label>
-            <input name="nextPassword" type="password" required />
+          <p className="mb-4 text-xs leading-5 text-[#607287]">
+            Şifre değiştirdikten sonra oturumunuz kapatılır ve giriş ekranına yönlendirilirsiniz.
+          </p>
+          {hasError ? (
+            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-900">
+              Şifre değişikliği başarısız. Mevcut şifreyi kontrol edin.
+            </div>
+          ) : null}
+          <form action={changePasswordAction} className="grid gap-3">
+            <input name="currentPassword" type="password" placeholder="Mevcut şifre" required className={inputClass} />
+            <input name="nextPassword" type="password" placeholder="Yeni şifre" required className={inputClass} />
+            <input name="confirmPassword" type="password" placeholder="Yeni şifre tekrar" required className={inputClass} />
+            <SubmitButton pendingText="Güncelleniyor..." className={`w-full ${btnPrimary}`}>
+              Şifreyi güncelle
+            </SubmitButton>
+          </form>
+        </div>
+
+        {/* ── Reset another agent's password (owner/manager) ─── */}
+        {canManageTeam ? (
+          <div className={cardClass}>
+            <div className="mb-4 flex items-center gap-2.5">
+              <Shield className="h-4 w-4 text-[#37c2e8]" />
+              <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+                Üye şifresi sıfırla
+              </h2>
+            </div>
+            <p className="mb-4 text-xs leading-5 text-[#607287]">
+              Seçilen üyenin şifresini sıfırlayın. Bu işlem sizin oturumunuzu etkilemez.
+            </p>
+            {resetError ? (
+              <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-900">
+                Şifre sıfırlama başarısız oldu.
+              </div>
+            ) : null}
+            <form action={resetAgentPasswordAction} className="grid gap-3">
+              <select name="agentId" required className={inputClass}>
+                <option value="">Üye seçin</option>
+                {agents
+                  .filter((a) => a.id !== session.userId)
+                  .map((agent) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.name} ({agent.email})
+                    </option>
+                  ))}
+              </select>
+              <input name="newPassword" type="password" placeholder="Yeni şifre" required className={inputClass} />
+              <input name="confirmNewPassword" type="password" placeholder="Yeni şifre tekrar" required className={inputClass} />
+              <SubmitButton pendingText="Sıfırlanıyor..." className={`w-full ${btnPrimary}`}>
+                Şifreyi sıfırla
+              </SubmitButton>
+            </form>
           </div>
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-[#4e5562]">
-              Yeni şifre tekrar
-            </label>
-            <input name="confirmPassword" type="password" required />
+        ) : null}
+      </div>
+
+      {/* ── Team members (owner only) ─────────────── */}
+      {canManageTeam ? (
+        <section className={cardClass}>
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <Users className="h-4 w-4 text-[#37c2e8]" />
+              <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+                Ekip üyeleri
+              </h2>
+            </div>
+            <span className="rounded-full border border-[rgba(17,35,60,0.08)] bg-white/70 px-2.5 py-1 text-[0.68rem] font-semibold text-[#607287]">
+              {agents.length} üye
+            </span>
           </div>
-          <button className="inline-flex h-11 items-center justify-center rounded-2xl bg-[#2f3a49] px-5 text-sm font-semibold text-white transition hover:bg-[#24303e]">
-            Şifreyi güncelle
-          </button>
-        </form>
-      </Surface>
+
+          {agentError ? (
+            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-900">
+              Ekip üyesi oluşturulamadı. Gerekli alanları kontrol edin.
+            </div>
+          ) : null}
+
+          {/* Agent list */}
+          <div className="space-y-2">
+            {agents.map((agent) => (
+              <div
+                key={agent.id}
+                className="flex items-center justify-between gap-3 rounded-xl border border-[rgba(17,35,60,0.06)] bg-white/60 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#102038]">{agent.name}</p>
+                  <p className="mt-0.5 text-xs text-[#607287]">
+                    {agent.email} · {getRoleLabel(agent.role)} · {getActiveLabel(agent.isActive)}
+                    {agent.invitePending ? " · Davet bekliyor" : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Link href={`/ticket/admin/team/${agent.id}`} className={btnSecondary}>
+                    Düzenle
+                  </Link>
+                  <form action={toggleSupportAgentStateAction}>
+                    <input type="hidden" name="agentId" value={agent.id} />
+                    <input type="hidden" name="isActive" value={agent.isActive ? "false" : "true"} />
+                    <button className={btnSecondary}>
+                      {agent.isActive ? "Pasif" : "Aktif"}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add agent form */}
+          <details className="mt-4 rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-[#102038] marker:content-none">
+              <Plus className="h-3.5 w-3.5" /> Yeni ekip üyesi ekle
+            </summary>
+            <div className="border-t border-[rgba(17,35,60,0.08)] px-4 pb-4 pt-3">
+              <form action={createSupportAgentAction} className="grid gap-3 sm:grid-cols-2">
+                <input name="name" placeholder="Ad soyad" required className={inputClass} />
+                <input name="email" type="email" placeholder="ekip@uptexx.com" required className={inputClass} />
+                <select name="role" defaultValue="agent" className={`sm:col-span-2 ${inputClass}`}>
+                  <option value="agent">Destek Uzmanı</option>
+                  <option value="manager">Yönetici</option>
+                  <option value="owner">Sahip</option>
+                </select>
+                <SubmitButton pendingText="Oluşturuluyor..." className={`w-full sm:col-span-2 ${btnPrimary}`}>
+                  Ekip üyesi ekle
+                </SubmitButton>
+              </form>
+            </div>
+          </details>
+        </section>
+      ) : null}
+
+      {/* ── Tenant management (owner/manager) ─────── */}
+      {canManageTenants ? (
+        <section className={cardClass}>
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <Building2 className="h-4 w-4 text-[#37c2e8]" />
+              <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+                Tenantlar
+              </h2>
+            </div>
+            <span className="rounded-full border border-[rgba(17,35,60,0.08)] bg-white/70 px-2.5 py-1 text-[0.68rem] font-semibold text-[#607287]">
+              {tenants.length} tenant
+            </span>
+          </div>
+
+          {tenantError ? (
+            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-900">
+              Tenant oluşturulamadı. Gerekli alanları kontrol edin.
+            </div>
+          ) : null}
+
+          {/* Tenant list */}
+          <div className="space-y-2">
+            {tenants.map((tenant) => (
+              <div
+                key={tenant.id}
+                className="flex items-center justify-between gap-3 rounded-xl border border-[rgba(17,35,60,0.06)] bg-white/60 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#102038]">{tenant.name}</p>
+                  <p className="mt-0.5 text-xs text-[#607287]">
+                    {tenant.domains.join(", ") || "Henüz domain yok"} · {getActiveLabel(tenant.isActive)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Link href={`/ticket/admin/tenants/${tenant.id}`} className={btnSecondary}>
+                    Düzenle
+                  </Link>
+                  <form action={toggleTenantStateAction}>
+                    <input type="hidden" name="tenantId" value={tenant.id} />
+                    <input type="hidden" name="isActive" value={tenant.isActive ? "false" : "true"} />
+                    <button className={btnSecondary}>
+                      {tenant.isActive ? "Pasif" : "Aktif"}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add tenant form */}
+          <details className="mt-4 rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-[#102038] marker:content-none">
+              <Plus className="h-3.5 w-3.5" /> Yeni tenant ekle
+            </summary>
+            <div className="border-t border-[rgba(17,35,60,0.08)] px-4 pb-4 pt-3">
+              <form action={createTenantAction} className="grid gap-3 sm:grid-cols-2">
+                <input name="name" placeholder="Müşteri şirket adı" required className={inputClass} />
+                <input
+                  name="supportAddress"
+                  placeholder="destek@uptexx.com"
+                  defaultValue="destek@uptexx.com"
+                  required
+                  className={inputClass}
+                />
+                <textarea
+                  name="domains"
+                  rows={2}
+                  placeholder="acme.com.tr, acmelojistik.com"
+                  className={`resize-none sm:col-span-2 ${inputClass} h-auto py-2`}
+                />
+                <SubmitButton pendingText="Oluşturuluyor..." className={`w-full sm:col-span-2 ${btnPrimary}`}>
+                  Tenant oluştur
+                </SubmitButton>
+              </form>
+            </div>
+          </details>
+        </section>
+      ) : null}
     </main>
   );
 }

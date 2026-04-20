@@ -14,8 +14,10 @@ import {
   activateSupportAgent,
   addTicketMessage,
   changeSupportAgentPassword,
+  createManualTicket,
   createSupportAgent,
   createTenant,
+  resetAgentPasswordByAdmin,
   setSupportAgentActiveState,
   setTenantActiveState,
   syncInbox,
@@ -48,7 +50,7 @@ export async function createTenantAction(formData: FormData) {
     .filter(Boolean);
 
   if (!name || !supportAddress) {
-    redirect("/ticket/admin?error=tenant");
+    redirect("/ticket/admin/account?error=tenant");
   }
 
   await createTenant({
@@ -59,7 +61,8 @@ export async function createTenantAction(formData: FormData) {
   });
 
   revalidatePath("/ticket/admin");
-  redirect("/ticket/admin?tenant=created");
+  revalidatePath("/ticket/admin/account");
+  redirect("/ticket/admin/account?tenant=created");
 }
 
 export async function toggleTenantStateAction(formData: FormData) {
@@ -74,7 +77,8 @@ export async function toggleTenantStateAction(formData: FormData) {
   });
 
   revalidatePath("/ticket/admin");
-  redirect("/ticket/admin?tenant=updated");
+  revalidatePath("/ticket/admin/account");
+  redirect("/ticket/admin/account?tenant=updated");
 }
 
 export async function createSupportAgentAction(formData: FormData) {
@@ -88,7 +92,7 @@ export async function createSupportAgentAction(formData: FormData) {
   const headerMap = await headers();
 
   if (!name || !email) {
-    redirect("/ticket/admin?error=agent");
+    redirect("/ticket/admin/account?error=agent");
   }
 
   await createSupportAgent({
@@ -100,7 +104,8 @@ export async function createSupportAgentAction(formData: FormData) {
   });
 
   revalidatePath("/ticket/admin");
-  redirect("/ticket/admin?agent=created");
+  revalidatePath("/ticket/admin/account");
+  redirect("/ticket/admin/account?agent=created");
 }
 
 export async function toggleSupportAgentStateAction(formData: FormData) {
@@ -115,7 +120,8 @@ export async function toggleSupportAgentStateAction(formData: FormData) {
   });
 
   revalidatePath("/ticket/admin");
-  redirect("/ticket/admin?agent=updated");
+  revalidatePath("/ticket/admin/account");
+  redirect("/ticket/admin/account?agent=updated");
 }
 
 export async function updateTenantAction(formData: FormData) {
@@ -284,5 +290,62 @@ export async function changePasswordAction(formData: FormData) {
     redirect("/ticket/admin/account?error=password");
   }
 
-  redirect("/ticket/admin/account?updated=1");
+  await clearAdminSession();
+  redirect("/ticket/login");
+}
+
+export async function resetAgentPasswordAction(formData: FormData) {
+  await requireMinimumRole(["owner", "manager"]);
+  const agentId = String(formData.get("agentId") ?? "");
+  const newPassword = String(formData.get("newPassword") ?? "");
+  const confirmNewPassword = String(formData.get("confirmNewPassword") ?? "");
+
+  if (!agentId || !newPassword || newPassword !== confirmNewPassword) {
+    redirect("/ticket/admin/account?error=reset");
+  }
+
+  const result = await resetAgentPasswordByAdmin({
+    agentId,
+    newPassword,
+  });
+
+  if (!result.success) {
+    redirect("/ticket/admin/account?error=reset");
+  }
+
+  revalidatePath("/ticket/admin/account");
+  redirect("/ticket/admin/account?reset=1");
+}
+
+export async function createManualTicketAction(formData: FormData) {
+  const session = await requireMinimumRole(["owner", "manager"]);
+  const tenantId = String(formData.get("tenantId") ?? "").trim();
+  const customerName = String(formData.get("customerName") ?? "").trim();
+  const customerEmail = String(formData.get("customerEmail") ?? "").trim();
+  const customerPhone = String(formData.get("customerPhone") ?? "").trim();
+  const subject = String(formData.get("subject") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const priority = String(formData.get("priority") ?? "normal") as
+    | "low"
+    | "normal"
+    | "high"
+    | "critical";
+
+  if (!tenantId || !customerName || !customerEmail || !customerPhone || !subject || !description) {
+    redirect("/ticket/admin?error=manual_ticket");
+  }
+
+  await createManualTicket({
+    tenantId,
+    customerName,
+    customerEmail,
+    customerPhone,
+    subject,
+    description,
+    priority,
+    createdByEmail: session.email,
+  });
+
+  revalidatePath("/ticket/admin");
+  redirect("/ticket/admin?manual_ticket=created");
 }

@@ -986,6 +986,201 @@ export async function changeSupportAgentPassword(input: {
   return { success: true };
 }
 
+export async function resetAgentPasswordByAdmin(input: {
+  agentId: string;
+  newPassword: string;
+}) {
+  if (!hasDatabase) {
+    return { success: true };
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return { success: false };
+
+  const rows = await db
+    .select()
+    .from(supportAgents)
+    .where(eq(supportAgents.id, input.agentId))
+    .limit(1);
+
+  if (!rows[0]) return { success: false };
+
+  await db
+    .update(supportAgents)
+    .set({
+      passwordHash: await hash(input.newPassword, 10),
+      updatedAt: now(),
+    })
+    .where(eq(supportAgents.id, input.agentId));
+
+  return { success: true };
+}
+
+export async function createManualTicket(input: {
+  tenantId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  subject: string;
+  description: string;
+  priority: "low" | "normal" | "high" | "critical";
+  createdByEmail: string;
+}) {
+  const sequenceNo = await getNextSequenceNo();
+  const ticketId = randomUUID();
+  const createdAt = new Date();
+
+  if (!hasDatabase) {
+    const store = await loadMockStore();
+    const tenant = store.tenants.find((t) => t.id === input.tenantId);
+    if (!tenant) return null;
+
+    let customer = store.customers?.find(
+      (c) => c.email === input.customerEmail && c.tenantId === input.tenantId,
+    );
+    if (!customer) {
+      customer = {
+        id: randomUUID(),
+        tenantId: input.tenantId,
+        email: input.customerEmail,
+        name: input.customerName,
+        companyName: null,
+      };
+      if (!store.customers) store.customers = [];
+      store.customers.push(customer);
+    }
+
+    const ticket: TicketDetail = {
+      id: ticketId,
+      ticketCode: createTicketCode(sequenceNo),
+      tenantId: tenant.id,
+      tenantName: tenant.name,
+      tenantIsActive: tenant.isActive,
+      tenantDomains: tenant.domains,
+      customerId: customer.id,
+      customerEmail: customer.email,
+      customerName: customer.name,
+      assigneeId: null,
+      assigneeName: null,
+      subject: input.subject,
+      description: input.description,
+      status: "new",
+      priority: input.priority,
+      sourceChannel: "manual",
+      firstReceivedAt: createdAt,
+      firstResponseAt: null,
+      resolvedAt: null,
+      resolutionNote: null,
+      lastActivityAt: createdAt,
+      createdAt,
+      messages: [
+        {
+          id: randomUUID(),
+          ticketId,
+          authorType: "admin",
+          direction: "internal",
+          sourceMessageId: null,
+          subject: input.subject,
+          bodyText: `Manuel ticket oluşturuldu: ${input.description}\n\nOluşturan: ${input.createdByEmail}\nMüşteri tel: ${input.customerPhone}`,
+          bodyHtml: null,
+          sentAt: createdAt,
+          createdAt,
+          attachments: [],
+        },
+      ],
+    };
+    store.tickets.unshift(ticket);
+    await saveMockStore(store);
+
+    await recordAudit({
+      action: "manual_ticket_create",
+      entityType: "ticket",
+      entityId: ticketId,
+      summary: `Manuel ticket oluşturuldu: ${ticket.ticketCode} - ${input.subject}`,
+      adminEmail: input.createdByEmail,
+    });
+
+    return ticket;
+  }
+
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return null;
+
+  const tenantRows = await db
+    .select()
+    .from(tenants)
+    .where(eq(tenants.id, input.tenantId))
+    .limit(1);
+  if (!tenantRows[0]) return null;
+
+  const existingCustomer = await db
+    .select()
+    .from(customers)
+    .where(
+      and(
+        eq(customers.email, input.customerEmail),
+        eq(customers.tenantId, input.tenantId),
+      ),
+    )
+    .limit(1);
+
+  let customerId: string;
+  if (existingCustomer[0]) {
+    customerId = existingCustomer[0].id;
+  } else {
+    customerId = randomUUID();
+    await db.insert(customers).values({
+      id: customerId,
+      tenantId: input.tenantId,
+      email: input.customerEmail,
+      name: input.customerName,
+      createdAt,
+      updatedAt: createdAt,
+    });
+  }
+
+  await db.insert(tickets).values({
+    id: ticketId,
+    ticketCode: createTicketCode(sequenceNo),
+    sequenceNo,
+    tenantId: input.tenantId,
+    customerId,
+    subject: input.subject,
+    description: input.description,
+    status: "new",
+    priority: input.priority,
+    sourceChannel: "manual",
+    firstReceivedAt: createdAt,
+    lastActivityAt: createdAt,
+    createdAt,
+    updatedAt: createdAt,
+  });
+
+  await db.insert(ticketMessages).values({
+    id: randomUUID(),
+    ticketId,
+    authorType: "admin",
+    direction: "internal",
+    subject: input.subject,
+    bodyText: `Manuel ticket oluşturuldu: ${input.description}\n\nOluşturan: ${input.createdByEmail}\nMüşteri tel: ${input.customerPhone}`,
+    deliveryStatus: "stored",
+    sentAt: createdAt,
+    createdAt,
+  });
+
+  await recordAudit({
+    action: "manual_ticket_create",
+    entityType: "ticket",
+    entityId: ticketId,
+    summary: `Manuel ticket oluşturuldu: ${createTicketCode(sequenceNo)} - ${input.subject}`,
+    adminEmail: input.createdByEmail,
+  });
+
+  return getTicketDetail(ticketId);
+}
+
 function applyFiltersToMockTickets(filters: TicketFilters) {
   return loadMockStore().then((store) =>
     store.tickets

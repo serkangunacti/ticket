@@ -5,25 +5,19 @@ import {
   Download,
   Filter,
   MailOpen,
-  Plus,
+  PenLine,
 } from "lucide-react";
 
 import { SubmitButton } from "@/components/submit-button";
 import { MetricTile, PriorityBadge, StatusBadge, Surface } from "@/components/ticket-ui";
 import { requireAdminSession } from "@/lib/auth";
 import { hasDatabase } from "@/lib/env";
-import { getActiveLabel, getRoleLabel } from "@/lib/labels";
 import { calculateMetrics } from "@/lib/reports";
-import { listAuditLogs, listSupportAgents, listTenants, listTickets } from "@/lib/data";
+import { listAuditLogs, listTenants, listTickets } from "@/lib/data";
 import type { TicketFilters, TicketListItem } from "@/lib/types";
 import { formatDateTime, formatDurationMinutes } from "@/lib/utils";
 
-import {
-  createSupportAgentAction,
-  createTenantAction,
-  toggleSupportAgentStateAction,
-  toggleTenantStateAction,
-} from "./actions";
+import { createManualTicketAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -172,10 +166,9 @@ export default async function AdminDashboard(props: {
   const searchParams = (await props.searchParams) ?? {};
   const session = await requireAdminSession();
   const filters = getFilters(searchParams);
-  const [tenants, tickets, agents, auditLogs] = await Promise.all([
+  const [tenants, tickets, auditLogs] = await Promise.all([
     listTenants(),
     listTickets(filters),
-    listSupportAgents(),
     listAuditLogs(8),
   ]);
   const metrics = calculateMetrics(tickets);
@@ -184,54 +177,36 @@ export default async function AdminDashboard(props: {
   const attentionItems = attentionSummary.items;
   const attentionTicketCount = attentionSummary.totalCount;
   const unassignedOpenCount = openTickets.filter((ticket) => !ticket.assigneeId).length;
-  const canManageTenants = session.role === "owner" || session.role === "manager";
-  const canManageTeam = session.role === "owner";
-  const tenantEvent = getSearchParamValue(searchParams, "tenant");
-  const agentEvent = getSearchParamValue(searchParams, "agent");
+  const canCreateTicket = session.role === "owner" || session.role === "manager";
   const syncEvent = getSearchParamValue(searchParams, "sync");
   const syncScanned = Number(getSearchParamValue(searchParams, "scanned") ?? 0);
-  const pageError = getSearchParamValue(searchParams, "error");
-  const tenantCreated = tenantEvent === "created";
-  const agentCreated = agentEvent === "created";
-  const tenantUpdated = tenantEvent === "updated";
-  const agentUpdated = agentEvent === "updated";
-  const tenantCreateError = pageError === "tenant";
-  const agentCreateError = pageError === "agent";
+  const manualTicketCreated = getSearchParamValue(searchParams, "manual_ticket") === "created";
+  const manualTicketError = getSearchParamValue(searchParams, "error") === "manual_ticket";
 
   return (
     <main className="mx-auto flex w-full max-w-[1480px] flex-col gap-5 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-      <section className="relative overflow-hidden rounded-[30px] border border-[rgba(255,255,255,0.18)] bg-[linear-gradient(135deg,#071526_0%,#0f2745_56%,#173c67_100%)] px-5 py-6 text-white shadow-[0_28px_80px_rgba(7,21,38,0.22)] sm:px-6 lg:px-8">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-y-0 right-0 w-[28rem] bg-[radial-gradient(circle_at_center,rgba(55,194,232,0.16),transparent_62%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,transparent,rgba(255,255,255,0.04))]" />
+      {/* ── Header row ───────────────────────── */}
+      <section className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#607287]">
+            Ticket yönetimi
+          </p>
+          <h1 className="mt-1 text-[2rem] font-semibold tracking-tight text-[#102038]">
+            Destek operasyonu
+          </h1>
         </div>
-
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-[#8de7ff]">
-              Ticket yönetimi
-            </div>
-            <h1 className="mt-4 text-[2.25rem] font-semibold tracking-tight text-white sm:text-[2.65rem]">
-              Destek operasyonu
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#c7d8e8] sm:text-[0.95rem]">
-              Uptexx ana sitedeki lacivert kurumsal dil ile aynı hat üzerinde, daha sıkı
-              ve daha okunabilir bir ticket yönetim yüzeyi.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2.5">
           <a href={buildReportQuery(filters, "xlsx")} className={secondaryButtonClass}>
-            <Download className="h-4 w-4" /> Excel export
+            <Download className="h-4 w-4" /> Excel
           </a>
           <a href={buildReportQuery(filters, "pdf")} className={secondaryButtonClass}>
-            <Download className="h-4 w-4" /> PDF özet
+            <Download className="h-4 w-4" /> PDF
           </a>
-        </div>
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {/* ── Metrics ──────────────────────────── */}
+      <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         <MetricTile label="Toplam ticket" value={metrics.totalTickets} hint="Tüm kayıtlar" />
         <MetricTile label="Açık ticket" value={metrics.openTickets} hint="Aktif operasyon" />
         <MetricTile label="Kapanan ticket" value={metrics.closedTickets} hint="Tamamlananlar" />
@@ -249,338 +224,144 @@ export default async function AdminDashboard(props: {
       </section>
 
       {!hasDatabase ? (
-        <section className="rounded-[22px] border border-amber-300/80 bg-[linear-gradient(135deg,rgba(255,247,219,0.96)_0%,rgba(255,251,237,0.98)_100%)] px-4 py-3.5 text-sm text-amber-950 shadow-[0_14px_24px_rgba(163,120,24,0.08)]">
-          <p className="font-semibold">Mock mode aktif: kayitlar kalici degil.</p>
-          <p className="mt-1 leading-6">
-            `DATABASE_URL` tanimlanmadigi icin uygulama gecici store ile calisiyor.
-            TiDB baglantisini kurup `npm run db:init` calistirdiginizda ticket, tenant ve ekip kayitlari kalici olarak veritabaninda tutulur.
+        <section className="rounded-xl border border-amber-300/80 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
+          <p className="font-semibold">Mock mode aktif: kayıtlar kalıcı değil.</p>
+          <p className="mt-1 text-xs leading-5">
+            DATABASE_URL tanımlanmadığı için uygulama geçici store ile çalışıyor.
           </p>
         </section>
       ) : null}
 
-      {syncEvent === "done" || tenantUpdated || agentUpdated ? (
-        <section className="space-y-3">
-          {syncEvent === "done" ? (
-            <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/95 px-4 py-3.5 text-sm text-emerald-950">
-              <p className="font-semibold">Mail senkronizasyonu tamamlandı.</p>
-              <p className="mt-1 leading-6">
-                Inbox içinde {syncScanned} ileti kontrol edildi ve dashboard verileri yenilendi.
-              </p>
-            </div>
-          ) : null}
-          {tenantUpdated ? (
-            <div className="rounded-[22px] border border-cyan-200 bg-cyan-50/95 px-4 py-3.5 text-sm text-cyan-950">
-              Tenant durumu güncellendi.
-            </div>
-          ) : null}
-          {agentUpdated ? (
-            <div className="rounded-[22px] border border-cyan-200 bg-cyan-50/95 px-4 py-3.5 text-sm text-cyan-950">
-              Ekip üyesi durumu güncellendi.
-            </div>
-          ) : null}
+      {syncEvent === "done" ? (
+        <section className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+          Mail senkronizasyonu tamamlandı. {syncScanned} ileti tarandı.
+        </section>
+      ) : null}
+      {manualTicketCreated ? (
+        <section className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+          Manuel ticket başarıyla oluşturuldu.
         </section>
       ) : null}
 
-      <section className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
-        <Surface className={panelClass}>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d9f6ff_0%,#edf6fb_100%)] text-[#133961]">
-                <AlertTriangle className="h-4 w-4" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold tracking-tight text-[#102038] sm:text-2xl">
-                  Öncelikli aksiyonlar
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-[#607287]">
-                  Mevcut filtrelerde {attentionTicketCount} ticket için operasyon aksiyonu gerekiyor.
-                </p>
-              </div>
-            </div>
-            <div className={pillClass}>
-              {attentionItems.length} görünüm
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-2.5">
-            {attentionItems.length ? (
-              attentionItems.map((item) => (
-                <Link
-                  key={item.ticketId}
-                  href={`/ticket/admin/tickets/${item.ticketId}`}
-                  className="block rounded-[22px] border border-[rgba(17,35,60,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.78)_0%,rgba(244,248,251,0.9)_100%)] px-4 py-3.5 transition hover:-translate-y-0.5 hover:border-[rgba(55,194,232,0.2)] hover:shadow-[0_12px_26px_rgba(8,25,47,0.08)]"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-[#102038]">
-                        {item.ticketCode} · {item.reason}
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-[#324861]">{item.subject}</p>
-                      <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#607287]">
-                        {item.tenantName} · {item.detail}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge value={item.status} />
-                      <PriorityBadge value={item.priority} />
-                    </div>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <div className="rounded-[22px] border border-dashed border-[rgba(17,35,60,0.14)] bg-white/70 px-4 py-6 text-sm leading-6 text-[#607287]">
-                Seçili filtrelerde acil aksiyon gerektiren ticket görünmüyor.
-              </div>
-            )}
-          </div>
-        </Surface>
-
-        <Surface className={panelClass}>
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#ddeeff_0%,#f1f7fc_100%)] text-[#133961]">
-              <Clock3 className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight text-[#102038] sm:text-2xl">
-                Son işlemler
-              </h2>
-              <p className="mt-1 text-sm leading-6 text-[#607287]">
-                Tenant, ekip ve ticket hareketleri burada kronolojik görünür.
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-2.5">
-            {auditLogs.length ? (
-              auditLogs.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="rounded-[22px] border border-[rgba(17,35,60,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.78)_0%,rgba(244,248,251,0.92)_100%)] px-4 py-3.5"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-[#102038]">{entry.summary}</p>
-                    <span className={pillClass}>
-                      {entry.action}
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-sm leading-6 text-[#607287]">
-                    {entry.adminEmail} · {formatDateTime(entry.createdAt)}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-[22px] border border-dashed border-[rgba(17,35,60,0.14)] bg-white/70 px-4 py-6 text-sm leading-6 text-[#607287]">
-                Henüz kaydedilmiş işlem bulunmuyor.
-              </div>
-            )}
-          </div>
-        </Surface>
-      </section>
-
-      {canManageTenants || canManageTeam ? (
-        <section className="grid gap-4 xl:grid-cols-2">
-          {canManageTenants ? (
-            <details
-              className={`group ${panelClass} rounded-[26px]`}
-              open={tenantCreated || tenantCreateError}
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 marker:content-none sm:px-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d8f2fb_0%,#eef6fb_100%)] text-[#133961]">
-                    <Plus className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#607287]">
-                    Hızlı işlem
-                    </p>
-                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#102038]">
-                      Yeni tenant ekle
-                    </h2>
-                  </div>
-                </div>
-                <span className={primaryButtonClass}>
-                  <Plus className="h-4 w-4" /> Formu aç
-                </span>
-              </summary>
-
-              <div className="border-t border-[rgba(17,35,60,0.08)] px-5 pb-5 pt-4 sm:px-6">
-                {tenantCreated ? (
-                  <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-                    Tenant oluşturuldu.
-                  </div>
-                ) : null}
-                {tenantCreateError ? (
-                  <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900">
-                    Tenant oluşturulamadı. Gerekli alanları kontrol edin.
-                  </div>
-                ) : null}
-
-                <form action={createTenantAction} className="grid gap-3 sm:grid-cols-2">
-                  <input name="name" placeholder="Müşteri şirket adı" required />
-                  <input
-                    name="supportAddress"
-                    placeholder="destek@uptexx.com"
-                    defaultValue="destek@uptexx.com"
-                    required
-                  />
-                  <textarea
-                    name="domains"
-                    rows={3}
-                    placeholder="acme.com.tr, acmelojistik.com"
-                    className="resize-none sm:col-span-2"
-                  />
-                  <SubmitButton
-                    pendingText="Oluşturuluyor..."
-                    className={`w-full sm:col-span-2 ${primaryButtonClass}`}
-                  >
-                    Tenant oluştur
-                  </SubmitButton>
-                </form>
-              </div>
-            </details>
-          ) : null}
-
-          {canManageTeam ? (
-            <details
-              className={`group ${panelClass} rounded-[26px]`}
-              open={agentCreated || agentCreateError}
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 marker:content-none sm:px-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d8f2fb_0%,#eef6fb_100%)] text-[#133961]">
-                    <Plus className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#607287]">
-                    Hızlı işlem
-                    </p>
-                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#102038]">
-                      Yeni ekip üyesi ekle
-                    </h2>
-                  </div>
-                </div>
-                <span className={primaryButtonClass}>
-                  <Plus className="h-4 w-4" /> Formu aç
-                </span>
-              </summary>
-
-              <div className="border-t border-[rgba(17,35,60,0.08)] px-5 pb-5 pt-4 sm:px-6">
-                {agentCreated ? (
-                  <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-                    Ekip üyesi oluşturuldu ve davet akışı başlatıldı.
-                  </div>
-                ) : null}
-                {agentCreateError ? (
-                  <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900">
-                    Ekip üyesi oluşturulamadı. Gerekli alanları kontrol edin.
-                  </div>
-                ) : null}
-
-                <form action={createSupportAgentAction} className="grid gap-3 sm:grid-cols-2">
-                  <input name="name" placeholder="Ad soyad" required />
-                  <input name="email" type="email" placeholder="ekip@uptexx.com" required />
-                  <select name="role" defaultValue="agent" className="sm:col-span-2">
-                    <option value="agent">Destek Uzmanı</option>
-                    <option value="manager">Yönetici</option>
-                    <option value="owner">Sahip</option>
-                  </select>
-                  <SubmitButton
-                    pendingText="Oluşturuluyor..."
-                    className={`w-full sm:col-span-2 ${primaryButtonClass}`}
-                  >
-                    Ekip üyesi ekle
-                  </SubmitButton>
-                </form>
-              </div>
-            </details>
-          ) : null}
-        </section>
-      ) : null}
-
+      {/* ── Filters ──────────────────────────── */}
       <Surface className={panelClass}>
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d9f2fb_0%,#eef6fb_100%)] text-[#133961]">
-              <Filter className="h-4 w-4" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight text-[#102038] sm:text-2xl">
-                Filtreler
-              </h2>
-              <p className="mt-1 text-sm text-[#607287]">
-                Listeyi tenant, durum, öncelik ve tarih aralığına göre daraltın.
-              </p>
-            </div>
+        <div className="flex items-center gap-2.5 mb-4">
+          <Filter className="h-4 w-4 text-[#133961]" />
+          <h2 className="text-lg font-semibold tracking-tight text-[#102038]">Filtreler</h2>
+        </div>
+        <form className="grid gap-3 xl:grid-cols-[1.3fr_0.95fr_0.95fr_0.95fr_1.1fr_auto]" method="GET">
+          <input
+            name="query"
+            placeholder="Ticket kodu, konu, müşteri veya domain"
+            defaultValue={filters.query ?? ""}
+          />
+          <select name="tenantId" defaultValue={filters.tenantId ?? ""}>
+            <option value="">Tüm tenantlar</option>
+            {tenants.map((tenant) => (
+              <option key={tenant.id} value={tenant.id}>
+                {tenant.name}
+              </option>
+            ))}
+          </select>
+          <select name="status" defaultValue={filters.status ?? "all"}>
+            <option value="all">Tüm durumlar</option>
+            <option value="new">Yeni</option>
+            <option value="open">Açık</option>
+            <option value="waiting_customer">Müşteri yanıtı bekleniyor</option>
+            <option value="resolved">Çözüldü</option>
+            <option value="closed">Kapatıldı</option>
+          </select>
+          <select name="priority" defaultValue={filters.priority ?? "all"}>
+            <option value="all">Tüm öncelikler</option>
+            <option value="low">Düşük</option>
+            <option value="normal">Normal</option>
+            <option value="high">Yüksek</option>
+            <option value="critical">Kritik</option>
+          </select>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+            <input name="from" type="date" defaultValue={filters.from ?? ""} />
+            <input name="to" type="date" defaultValue={filters.to ?? ""} />
           </div>
+          <button className={`w-full ${primaryButtonClass}`}>Uygula</button>
+        </form>
+      </Surface>
 
-          <form className="grid gap-3 xl:grid-cols-[1.3fr_0.95fr_0.95fr_0.95fr_1.1fr_auto]" method="GET">
-            <input
-              name="query"
-              placeholder="Ticket kodu, konu, müşteri veya domain"
-              defaultValue={filters.query ?? ""}
-            />
-            <select name="tenantId" defaultValue={filters.tenantId ?? ""}>
-              <option value="">Tüm tenantlar</option>
-              {tenants.map((tenant) => (
-                <option key={tenant.id} value={tenant.id}>
-                  {tenant.name}
-                </option>
+      {/* ── Manual ticket creation (owner/manager only) ── */}
+      {canCreateTicket ? (
+        <Surface className={panelClass}>
+          <div className="flex items-center gap-2.5 mb-4">
+            <PenLine className="h-4 w-4 text-[#133961]" />
+            <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+              Manuel ticket oluştur
+            </h2>
+          </div>
+          <p className="mb-4 text-xs text-[#607287]">
+            Tüm müşteri alanları zorunludur. Oluşturan kişi otomatik kaydedilir.
+          </p>
+          {manualTicketError ? (
+            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-900">
+              Ticket oluşturulamadı. Tüm alanları doldurun.
+            </div>
+          ) : null}
+          <form action={createManualTicketAction} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <select name="tenantId" required>
+              <option value="">Tenant seçin</option>
+              {tenants.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
-            <select name="status" defaultValue={filters.status ?? "all"}>
-              <option value="all">Tüm durumlar</option>
-              <option value="new">Yeni</option>
-              <option value="open">Açık</option>
-              <option value="waiting_customer">Müşteri yanıtı bekleniyor</option>
-              <option value="resolved">Çözüldü</option>
-              <option value="closed">Kapatıldı</option>
-            </select>
-            <select name="priority" defaultValue={filters.priority ?? "all"}>
-              <option value="all">Tüm öncelikler</option>
+            <input name="customerName" placeholder="Müşteri adı soyadı" required />
+            <input name="customerEmail" type="email" placeholder="Müşteri e-posta" required />
+            <input name="customerPhone" placeholder="Müşteri telefon" required />
+            <input name="subject" placeholder="Konu" required className="sm:col-span-2 lg:col-span-2" />
+            <select name="priority" defaultValue="normal">
               <option value="low">Düşük</option>
               <option value="normal">Normal</option>
               <option value="high">Yüksek</option>
               <option value="critical">Kritik</option>
             </select>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-              <input name="from" type="date" defaultValue={filters.from ?? ""} />
-              <input name="to" type="date" defaultValue={filters.to ?? ""} />
+            <textarea
+              name="description"
+              rows={3}
+              placeholder="Detaylı açıklama"
+              required
+              className="resize-none sm:col-span-2 lg:col-span-3"
+            />
+            <div className="sm:col-span-2 lg:col-span-3">
+              <SubmitButton pendingText="Oluşturuluyor..." className={`w-full ${primaryButtonClass}`}>
+                Ticket oluştur
+              </SubmitButton>
             </div>
-            <button className={`w-full ${primaryButtonClass}`}>Uygula</button>
           </form>
-        </div>
-      </Surface>
+        </Surface>
+      ) : null}
 
+      {/* ── Ticket table ─────────────────────── */}
       <section>
         <Surface className={`min-w-0 overflow-hidden p-0 ${panelClass}`}>
-          <div className="flex flex-col gap-4 border-b border-[rgba(17,35,60,0.08)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div>
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#607287]">
-                Ticket listesi
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-tight text-[#102038] sm:text-[2rem]">
-                Filtrelenmiş görünüm
-              </h2>
-            </div>
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(17,35,60,0.08)] bg-white/80 px-3 py-1.5 text-sm font-semibold text-[#5f738c]">
-              <MailOpen className="h-4 w-4 text-[#133961]" />
+          <div className="flex items-center justify-between gap-4 border-b border-[rgba(17,35,60,0.08)] px-5 py-3.5 sm:px-6">
+            <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+              Ticket listesi
+            </h2>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(17,35,60,0.08)] bg-white/80 px-2.5 py-1 text-xs font-semibold text-[#5f738c]">
+              <MailOpen className="h-3.5 w-3.5 text-[#133961]" />
               {tickets.length} kayıt
             </div>
           </div>
 
-          <div className="overflow-x-auto xl:overflow-visible">
+          <div className="overflow-x-auto">
             <table className="min-w-full text-left">
               <thead className="bg-[rgba(19,57,97,0.04)] text-[0.68rem] uppercase tracking-[0.18em] text-[#607287]">
                 <tr>
-                  <th className="px-4 py-3.5">Ticket</th>
-                  <th className="px-4 py-3.5">Müşteri</th>
-                  <th className="px-4 py-3.5">Tenant</th>
-                  <th className="px-4 py-3.5">Atanan</th>
-                  <th className="px-4 py-3.5">Durum</th>
-                  <th className="px-4 py-3.5">Öncelik</th>
-                  <th className="px-4 py-3.5">İlk yanıt</th>
-                  <th className="px-4 py-3.5">Geliş</th>
-                  <th className="px-4 py-3.5 text-right">İşlem</th>
+                  <th className="px-4 py-3">Ticket</th>
+                  <th className="px-4 py-3">Müşteri</th>
+                  <th className="px-4 py-3">Tenant</th>
+                  <th className="px-4 py-3">Atanan</th>
+                  <th className="px-4 py-3">Durum</th>
+                  <th className="px-4 py-3">Öncelik</th>
+                  <th className="px-4 py-3">İlk yanıt</th>
+                  <th className="px-4 py-3">Geliş</th>
+                  <th className="px-4 py-3 text-right">İşlem</th>
                 </tr>
               </thead>
               <tbody>
@@ -597,42 +378,42 @@ export default async function AdminDashboard(props: {
                       key={ticket.id}
                       className="border-t border-[rgba(17,35,60,0.08)] transition hover:bg-[rgba(19,57,97,0.03)]"
                     >
-                      <td className="px-4 py-4 align-top">
+                      <td className="px-4 py-3.5 align-top">
                         <Link href={`/ticket/admin/tickets/${ticket.id}`} className="group block">
-                          <p className="font-semibold text-[#102038] transition group-hover:text-[#174d81]">
+                          <p className="text-sm font-semibold text-[#102038] transition group-hover:text-[#174d81]">
                             {ticket.ticketCode}
                           </p>
-                          <p className="mt-1 max-w-[18rem] text-sm leading-6 text-[#5f738c]">
+                          <p className="mt-0.5 max-w-[16rem] text-xs leading-5 text-[#5f738c]">
                             {ticket.subject}
                           </p>
                         </Link>
                       </td>
-                      <td className="px-4 py-4 align-top text-sm text-[#324861]">
-                        <p className="font-medium">{ticket.customerName ?? "İsimsiz kayıt"}</p>
-                        <p className="mt-1 break-all text-[#607287]">{ticket.customerEmail}</p>
+                      <td className="px-4 py-3.5 align-top text-xs text-[#324861]">
+                        <p className="font-medium">{ticket.customerName ?? "İsimsiz"}</p>
+                        <p className="mt-0.5 break-all text-[#607287]">{ticket.customerEmail}</p>
                       </td>
-                      <td className="px-4 py-4 align-top text-sm text-[#324861]">
+                      <td className="px-4 py-3.5 align-top text-xs text-[#324861]">
                         {ticket.tenantName}
                       </td>
-                      <td className="px-4 py-4 align-top text-sm text-[#607287]">
+                      <td className="px-4 py-3.5 align-top text-xs text-[#607287]">
                         {ticket.assigneeName ?? "Atanmadı"}
                       </td>
-                      <td className="px-4 py-4 align-top">
+                      <td className="px-4 py-3.5 align-top">
                         <StatusBadge value={ticket.status} />
                       </td>
-                      <td className="px-4 py-4 align-top">
+                      <td className="px-4 py-3.5 align-top">
                         <PriorityBadge value={ticket.priority} />
                       </td>
-                      <td className="px-4 py-4 align-top text-sm text-[#324861]">
+                      <td className="px-4 py-3.5 align-top text-xs text-[#324861]">
                         {formatDurationMinutes(firstResponseMinutes)}
                       </td>
-                      <td className="px-4 py-4 align-top text-sm whitespace-nowrap text-[#607287]">
+                      <td className="px-4 py-3.5 align-top text-xs whitespace-nowrap text-[#607287]">
                         {formatDateTime(ticket.firstReceivedAt)}
                       </td>
-                      <td className="px-4 py-4 align-top text-right">
+                      <td className="px-4 py-3.5 align-top text-right">
                         <Link
                           href={`/ticket/admin/tickets/${ticket.id}`}
-                          className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full border border-[rgba(17,35,60,0.08)] bg-white/84 px-4 text-sm font-semibold text-[#102038] transition hover:bg-white"
+                          className="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border border-[rgba(17,35,60,0.08)] bg-white/84 px-3 text-xs font-semibold text-[#102038] transition hover:bg-white"
                         >
                           Düzenle
                         </Link>
@@ -644,7 +425,7 @@ export default async function AdminDashboard(props: {
             </table>
 
             {!tickets.length ? (
-              <div className="px-6 py-12 text-center text-[#607287]">
+              <div className="px-6 py-10 text-center text-sm text-[#607287]">
                 Seçili filtreler için ticket bulunamadı.
               </div>
             ) : null}
@@ -652,115 +433,113 @@ export default async function AdminDashboard(props: {
         </Surface>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-2">
-        <div className="min-w-0 space-y-5">
-          <Surface className={`overflow-hidden ${softPanelClass}`}>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#607287]">
-              Tenant listesi
-            </p>
-            <div className="mt-4 space-y-2.5">
-              {tenants.map((tenant) => (
-                <div
-                  key={tenant.id}
-                  className="min-w-0 rounded-[20px] border border-[rgba(17,35,60,0.08)] bg-white/78 px-4 py-3.5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="break-words font-semibold text-[#102038]">{tenant.name}</p>
-                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#607287]">
-                        {getActiveLabel(tenant.isActive)}
-                      </p>
-                    </div>
-                    {canManageTenants ? (
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/ticket/admin/tenants/${tenant.id}`}
-                          className="rounded-full border border-[rgba(17,35,60,0.08)] bg-white px-3 py-1.5 text-xs font-semibold text-[#102038] transition hover:bg-[#f4f9fc]"
-                        >
-                          Düzenle
-                        </Link>
-                        <form action={toggleTenantStateAction}>
-                          <input type="hidden" name="tenantId" value={tenant.id} />
-                          <input
-                            type="hidden"
-                            name="isActive"
-                            value={tenant.isActive ? "false" : "true"}
-                          />
-                          <button className="rounded-full border border-[rgba(17,35,60,0.08)] bg-white px-3 py-1.5 text-xs font-semibold text-[#102038] transition hover:bg-[#f4f9fc]">
-                            {tenant.isActive ? "Pasife çek" : "Aktif et"}
-                          </button>
-                        </form>
-                      </div>
-                    ) : null}
-                  </div>
-                  <p className="mt-1 break-all text-sm leading-6 text-[#607287]">
-                    {tenant.domains.join(", ") || "Henüz domain tanımlı değil"}
-                  </p>
-                </div>
-              ))}
+      {/* ── Tenant list ──────────────────────── */}
+      <Surface className={softPanelClass}>
+        <p className="mb-3 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#607287]">
+          Tenant listesi
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {tenants.map((tenant) => (
+            <div
+              key={tenant.id}
+              className="rounded-xl border border-[rgba(17,35,60,0.06)] bg-white/60 px-3.5 py-2.5"
+            >
+              <p className="text-sm font-semibold text-[#102038]">{tenant.name}</p>
+              <p className="mt-0.5 text-xs text-[#607287]">
+                {tenant.domains.join(", ") || "Domain yok"}
+              </p>
             </div>
-          </Surface>
+          ))}
         </div>
+      </Surface>
 
-        <div className="min-w-0 space-y-5">
-          <Surface className={`overflow-hidden ${softPanelClass}`}>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d9f2fb_0%,#eef6fb_100%)] text-[#133961]">
-                <Plus className="h-4 w-4" />
-              </div>
+      {/* ── Öncelikli aksiyonlar + Son işlemler (bottom) ── */}
+      <section className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
+        <Surface className={panelClass}>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="mt-0.5 h-4 w-4 text-[#37c2e8]" />
               <div>
-                <h2 className="text-xl font-semibold tracking-tight text-[#102038] sm:text-2xl">
-                  Ekip üyeleri
+                <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+                  Öncelikli aksiyonlar
                 </h2>
-                <p className="mt-1 text-sm text-[#607287]">
-                  Ticketlara atanabilecek iç ekip kullanıcılarını yönetin.
+                <p className="mt-0.5 text-xs text-[#607287]">
+                  {attentionTicketCount} ticket için aksiyon gerekiyor.
                 </p>
               </div>
             </div>
+            <span className={pillClass}>{attentionItems.length} görünüm</span>
+          </div>
 
-            <div className="mt-4 space-y-2.5">
-              {agents.map((agent) => (
-                <div
-                  key={agent.id}
-                  className="min-w-0 rounded-[20px] border border-[rgba(17,35,60,0.08)] bg-white/78 px-4 py-3.5"
+          <div className="space-y-2">
+            {attentionItems.length ? (
+              attentionItems.map((item) => (
+                <Link
+                  key={item.ticketId}
+                  href={`/ticket/admin/tickets/${item.ticketId}`}
+                  className="block rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/70 px-3.5 py-3 transition hover:border-[rgba(55,194,232,0.2)] hover:shadow-sm"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="break-words font-semibold text-[#102038]">{agent.name}</p>
-                      <p className="mt-1 break-all text-sm text-[#607287]">{agent.email}</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#607287]">
-                        <span>{getRoleLabel(agent.role)}</span>
-                        <span>{getActiveLabel(agent.isActive)}</span>
-                        {agent.invitePending ? <span>Davet bekliyor</span> : null}
-                      </div>
+                      <p className="text-sm font-semibold text-[#102038]">
+                        {item.ticketCode} · {item.reason}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[#324861]">{item.subject}</p>
+                      <p className="mt-0.5 text-[0.65rem] uppercase tracking-[0.14em] text-[#607287]">
+                        {item.tenantName} · {item.detail}
+                      </p>
                     </div>
-                    {canManageTeam ? (
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/ticket/admin/team/${agent.id}`}
-                          className="rounded-full border border-[rgba(17,35,60,0.08)] bg-white px-3 py-1.5 text-xs font-semibold text-[#102038] transition hover:bg-[#f4f9fc]"
-                        >
-                          Düzenle
-                        </Link>
-                        <form action={toggleSupportAgentStateAction}>
-                          <input type="hidden" name="agentId" value={agent.id} />
-                          <input
-                            type="hidden"
-                            name="isActive"
-                            value={agent.isActive ? "false" : "true"}
-                          />
-                          <button className="rounded-full border border-[rgba(17,35,60,0.08)] bg-white px-3 py-1.5 text-xs font-semibold text-[#102038] transition hover:bg-[#f4f9fc]">
-                            {agent.isActive ? "Pasife çek" : "Aktif et"}
-                          </button>
-                        </form>
-                      </div>
-                    ) : null}
+                    <div className="flex items-center gap-1.5">
+                      <StatusBadge value={item.status} />
+                      <PriorityBadge value={item.priority} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                </Link>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-[rgba(17,35,60,0.14)] bg-white/70 px-4 py-5 text-xs text-[#607287]">
+                Acil aksiyon gerektiren ticket yok.
+              </div>
+            )}
+          </div>
+        </Surface>
+
+        <Surface className={panelClass}>
+          <div className="flex items-start gap-2.5 mb-4">
+            <Clock3 className="mt-0.5 h-4 w-4 text-[#37c2e8]" />
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+                Son işlemler
+              </h2>
+              <p className="mt-0.5 text-xs text-[#607287]">
+                Kronolojik hareket kayıtları.
+              </p>
             </div>
-          </Surface>
-        </div>
+          </div>
+
+          <div className="space-y-2">
+            {auditLogs.length ? (
+              auditLogs.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/70 px-3.5 py-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-[#102038]">{entry.summary}</p>
+                    <span className={pillClass}>{entry.action}</span>
+                  </div>
+                  <p className="mt-1 text-[0.65rem] text-[#607287]">
+                    {entry.adminEmail} · {formatDateTime(entry.createdAt)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-xl border border-dashed border-[rgba(17,35,60,0.14)] bg-white/70 px-4 py-5 text-xs text-[#607287]">
+                Henüz kaydedilmiş işlem yok.
+              </div>
+            )}
+          </div>
+        </Surface>
       </section>
     </main>
   );
