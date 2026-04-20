@@ -20,6 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import { AnimatedStatValue } from "@/components/animated-stat-value";
 import { SectionLabel, Surface } from "@/components/ticket-ui";
 
 export const metadata: Metadata = {
@@ -82,6 +83,12 @@ const proofMetrics = [
     value: "PDF + Excel",
     label: "müşteri raporlarını tek panelden üret",
   },
+];
+
+const heroPreviewMetrics = [
+  { value: 12, label: "aktif tenant" },
+  { value: 418, label: "açık ticket" },
+  { value: 8, label: "ilk yanıt", suffix: " dk" },
 ];
 
 const capabilityCards = [
@@ -228,11 +235,20 @@ const faqs = [
 
 const chartBars = [42, 58, 70, 88, 76, 96];
 const chartLabels = ["Oca", "Şub", "Mar", "Nis", "May", "Haz"];
+const chartLinePath = "M10,92 L48,78 L86,66 L124,40 L162,55 L210,24";
+const chartLineDots = [
+  { x: 10, y: 92 },
+  { x: 48, y: 78 },
+  { x: 86, y: 66 },
+  { x: 124, y: 40 },
+  { x: 162, y: 55 },
+  { x: 210, y: 24 },
+];
 const pipelineItems = [
-  { label: "Gelen mail", value: "146" },
-  { label: "Otomatik açılan", value: "138" },
-  { label: "Yanıtlanan", value: "124" },
-  { label: "Exportlanan", value: "06" },
+  { label: "Gelen mail", value: 146, width: 88 },
+  { label: "Otomatik açılan", value: 138, width: 77 },
+  { label: "Yanıtlanan", value: 124, width: 66 },
+  { label: "Exportlanan", value: 6, width: 55, padStart: 2 },
 ];
 const heroSignalColumns = [
   ["MAILBOX_SYNC", "THREAD_MATCH", "TENANT_ROUTE", "QUEUE_SIGNAL", "SLA_WINDOW", "EXPORT_READY", "01:14 UTC"],
@@ -434,22 +450,21 @@ export default function TicketLandingPage() {
                 </div>
 
                 <div className="relative mt-5 grid gap-4 sm:grid-cols-3">
-                  {[
-                    { value: "12", label: "aktif tenant" },
-                    { value: "418", label: "açık ticket" },
-                    { value: "8 dk", label: "ilk yanıt" },
-                  ].map((item, index) => (
+                  {heroPreviewMetrics.map((item, index) => (
                     <div
                       key={item.label}
-                      className="rounded-[22px] border border-white/8 bg-white/[0.07] p-4 backdrop-blur-md"
+                      className="ticket-preview-metric rounded-[22px] border border-white/8 bg-white/[0.07] p-4 backdrop-blur-md"
                       style={{ animationDelay: `${index * 80}ms` }}
                     >
                       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
                         {item.label}
                       </p>
-                      <p className="mt-3 text-[1.9rem] font-semibold tracking-tight text-white">
-                        {item.value}
-                      </p>
+                      <AnimatedStatValue
+                        value={item.value}
+                        suffix={item.suffix}
+                        duration={1500 + index * 180}
+                        className="ticket-stat-number mt-3 block text-[1.9rem] font-semibold tracking-tight text-white"
+                      />
                     </div>
                   ))}
                 </div>
@@ -462,6 +477,7 @@ export default function TicketLandingPage() {
                     </div>
 
                       <div className="relative mt-5 h-52 overflow-hidden rounded-[24px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.02)_100%)] p-4">
+                      <div className="ticket-chart-scan absolute inset-y-2 left-[-28%] w-[36%]" />
                       <div className="absolute inset-x-4 bottom-4 top-8 flex items-end gap-3">
                         {chartBars.map((bar, index) => (
                           <div key={chartLabels[index]} className="ticket-bar flex-1">
@@ -480,22 +496,38 @@ export default function TicketLandingPage() {
                         className="pointer-events-none absolute inset-x-4 top-10 h-[120px] w-[calc(100%-2rem)]"
                         aria-hidden="true"
                       >
-                        <polyline
+                        <path
+                          d={chartLinePath}
                           fill="none"
                           stroke="rgba(143, 233, 255, 0.28)"
                           strokeWidth="8"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          points="10,92 48,78 86,66 124,40 162,55 210,24"
+                          className="ticket-chart-line-glow"
                         />
-                        <polyline
+                        <path
+                          d={chartLinePath}
                           fill="none"
                           stroke="#ffffff"
                           strokeWidth="3"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          points="10,92 48,78 86,66 124,40 162,55 210,24"
+                          className="ticket-chart-line"
                         />
+                        {chartLineDots.map((dot, index) => (
+                          <circle
+                            key={`${dot.x}-${dot.y}`}
+                            cx={dot.x}
+                            cy={dot.y}
+                            r="4"
+                            fill="#8fe9ff"
+                            className="ticket-chart-node"
+                            style={{ animationDelay: `${index * 220}ms` }}
+                          />
+                        ))}
+                        <circle r="4.5" fill="#dcf7ff" className="ticket-chart-orb">
+                          <animateMotion dur="6s" repeatCount="indefinite" path={chartLinePath} />
+                        </circle>
                       </svg>
 
                       <div className="absolute inset-x-4 bottom-0 flex justify-between text-[11px] uppercase tracking-[0.22em] text-[#7391ab]">
@@ -510,17 +542,22 @@ export default function TicketLandingPage() {
                     {pipelineItems.map((item, index) => (
                       <div
                         key={item.label}
-                        className="rounded-[24px] border border-white/8 bg-white/[0.06] p-4"
+                        className="ticket-preview-metric rounded-[24px] border border-white/8 bg-white/[0.06] p-4"
                         style={{ animationDelay: `${index * 70}ms` }}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <p className="text-sm text-[#bdd0e0]">{item.label}</p>
-                          <p className="text-xl font-semibold tracking-tight text-white">{item.value}</p>
+                          <AnimatedStatValue
+                            value={item.value}
+                            padStart={item.padStart}
+                            duration={1400 + index * 160}
+                            className="ticket-stat-number text-xl font-semibold tracking-tight text-white"
+                          />
                         </div>
                         <div className="ticket-beam mt-3 h-2 rounded-full bg-white/8">
                           <div
                             className="h-full rounded-full bg-[linear-gradient(90deg,#7ce0f9,#245dff)]"
-                            style={{ width: `${88 - index * 11}%` }}
+                            style={{ width: `${item.width}%` }}
                           />
                         </div>
                       </div>

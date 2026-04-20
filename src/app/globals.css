@@ -181,9 +181,58 @@ button {
   color: rgba(101, 214, 246, 0.68);
 }
 
+.ticket-preview-metric {
+  animation: ticket-panel-breathe 6s ease-in-out infinite;
+}
+
+.ticket-stat-number {
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 18px rgba(143, 233, 255, 0.16);
+}
+
 .ticket-bar span {
+  position: relative;
+  overflow: hidden;
   transform-origin: bottom;
   animation: ticket-grow 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.ticket-bar span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 42%);
+  opacity: 0.72;
+  animation: ticket-bar-sheen 3.8s ease-in-out infinite;
+}
+
+.ticket-chart-scan {
+  background: linear-gradient(90deg, transparent, rgba(143, 233, 255, 0.18), transparent);
+  filter: blur(8px);
+  animation: ticket-chart-scan 5.8s linear infinite;
+}
+
+.ticket-chart-line-glow,
+.ticket-chart-line {
+  stroke-dasharray: 340;
+  stroke-dashoffset: 340;
+}
+
+.ticket-chart-line-glow {
+  animation: ticket-chart-draw 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.ticket-chart-line {
+  animation: ticket-chart-draw 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.ticket-chart-node {
+  transform-origin: center;
+  animation: ticket-chart-node 3.4s ease-in-out infinite;
+}
+
+.ticket-chart-orb {
+  filter: drop-shadow(0 0 12px rgba(143, 233, 255, 0.72));
 }
 
 .ticket-beam {
@@ -231,12 +280,66 @@ button {
   }
 }
 
+@keyframes ticket-panel-breathe {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    box-shadow: 0 14px 34px rgba(8, 25, 47, 0.12);
+  }
+  50% {
+    transform: translate3d(0, -2px, 0);
+    box-shadow: 0 20px 42px rgba(18, 67, 121, 0.18);
+  }
+}
+
 @keyframes ticket-signal-drift {
   from {
     transform: translate3d(0, -18%, 0);
   }
   to {
     transform: translate3d(0, 26%, 0);
+  }
+}
+
+@keyframes ticket-chart-draw {
+  from {
+    stroke-dashoffset: 340;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ticket-chart-node {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes ticket-chart-scan {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(420%);
+  }
+}
+
+@keyframes ticket-bar-sheen {
+  0%,
+  100% {
+    transform: translateY(-10%);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateY(0%);
+    opacity: 0.62;
   }
 }
 
@@ -273,7 +376,13 @@ button {
   .ticket-float,
   .ticket-float-delayed,
   .ticket-orb,
+  .ticket-preview-metric,
   .ticket-bar span,
+  .ticket-bar span::after,
+  .ticket-chart-scan,
+  .ticket-chart-line-glow,
+  .ticket-chart-line,
+  .ticket-chart-node,
   .ticket-beam::after {
     animation: none !important;
     opacity: 1 !important;
