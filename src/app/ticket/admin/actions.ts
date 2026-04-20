@@ -35,7 +35,7 @@ function getAppBaseUrl(headerMap: Headers) {
 
 export async function logoutAction() {
   await clearAdminSession();
-  redirect("/ticket/login");
+  redirect("/ticket");
 }
 
 export async function createTenantAction(formData: FormData) {

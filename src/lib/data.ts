@@ -56,6 +56,12 @@ function createInviteToken() {
   return randomBytes(24).toString("hex");
 }
 
+const LEGACY_BOOTSTRAP_ADMIN_EMAILS = ["admin@uptexx.com"];
+
+function getLegacyBootstrapAdminEmails() {
+  return LEGACY_BOOTSTRAP_ADMIN_EMAILS.filter((email) => email !== env.ADMIN_EMAIL);
+}
+
 async function sendSupportInvite(input: {
   to: string;
   name: string;
@@ -109,6 +115,11 @@ async function ensureDbAdminUser() {
   const db = getDb();
   if (!db) return null;
 
+  const legacyEmails = getLegacyBootstrapAdminEmails();
+  if (legacyEmails.length) {
+    await db.delete(adminUsers).where(inArray(adminUsers.email, legacyEmails));
+  }
+
   const existing = await db
     .select()
     .from(adminUsers)
@@ -149,8 +160,31 @@ async function ensureDbAdminUser() {
 async function ensureDefaultSupportAgent() {
   if (!hasAdminCredentials) return null;
 
+  const legacyEmails = getLegacyBootstrapAdminEmails();
+
   if (!hasDatabase) {
     const store = await loadMockStore();
+    if (legacyEmails.length) {
+      const legacyIds = store.supportAgents
+        .filter((item) => legacyEmails.includes(item.email))
+        .map((item) => item.id);
+
+      if (legacyIds.length) {
+        store.supportAgents = store.supportAgents.filter(
+          (item) => !legacyEmails.includes(item.email),
+        );
+        store.tickets = store.tickets.map((ticket) =>
+          ticket.assigneeId && legacyIds.includes(ticket.assigneeId)
+            ? {
+                ...ticket,
+                assigneeId: null,
+                assigneeName: null,
+              }
+            : ticket,
+        );
+      }
+    }
+
     let agent = store.supportAgents.find((item) => item.email === env.ADMIN_EMAIL);
     if (!agent) {
       agent = {
@@ -185,6 +219,23 @@ async function ensureDefaultSupportAgent() {
 
   const db = getDb();
   if (!db) return null;
+
+  if (legacyEmails.length) {
+    const legacyAgents = await db
+      .select({ id: supportAgents.id })
+      .from(supportAgents)
+      .where(inArray(supportAgents.email, legacyEmails));
+
+    const legacyIds = legacyAgents.map((agent) => agent.id);
+    if (legacyIds.length) {
+      await db
+        .update(tickets)
+        .set({ assigneeId: null, updatedAt: now() })
+        .where(inArray(tickets.assigneeId, legacyIds));
+
+      await db.delete(supportAgents).where(inArray(supportAgents.email, legacyEmails));
+    }
+  }
 
   const existing = await db
     .select()
