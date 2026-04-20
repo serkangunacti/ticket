@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ZoomIn, ZoomOut } from "lucide-react";
 
 type Props = {
@@ -95,9 +96,9 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
     onCrop(canvas.toDataURL("image/png", 0.9));
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={onCancel}
     >
       <div
@@ -172,6 +173,7 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

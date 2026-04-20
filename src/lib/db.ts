@@ -186,6 +186,12 @@ export async function ensureDatabaseReady() {
           successful boolean not null,
           key monthly_reports_tenant_idx (tenant_id)
         )`,
+        `create table if not exists site_settings (
+          id varchar(36) not null primary key,
+          company_name varchar(255) not null default 'Uptexx Ticket',
+          logo_data_url mediumtext null,
+          updated_at datetime not null
+        )`,
       ];
 
       const connection = await pool.getConnection();

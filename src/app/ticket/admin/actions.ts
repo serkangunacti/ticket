@@ -140,6 +140,21 @@ export async function toggleSupportAgentStateAction(formData: FormData) {
   const agentId = String(formData.get("agentId") ?? "");
   const isActive = String(formData.get("isActive") ?? "true") === "true";
 
+  /* Prevent deactivating the only owner */
+  if (!isActive) {
+    const { listSupportAgents } = await import("@/lib/data");
+    const agents = await listSupportAgents();
+    const target = agents.find((a) => a.id === agentId);
+    if (target?.role === "owner") {
+      const activeOwners = agents.filter(
+        (a) => a.role === "owner" && a.isActive,
+      );
+      if (activeOwners.length <= 1) {
+        redirect("/ticket/admin/account?error=last_owner");
+      }
+    }
+  }
+
   await setSupportAgentActiveState({
     agentId,
     isActive,

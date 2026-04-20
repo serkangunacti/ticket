@@ -24,7 +24,7 @@ export function slugify(name: string): string {
   );
 }
 
-/* ── File-based fallback (DB mode) ── */
+/* ── File-based fallback (no-DB / mock mode) ── */
 const DEFAULT_STORE_DIR =
   process.env.MOCK_STORE_DIR ?? path.join(os.tmpdir(), "uptexx-mock-store");
 const STORE_DIR =
@@ -47,6 +47,40 @@ async function writeToFile(settings: SiteSettings): Promise<void> {
   await writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2));
 }
 
+/* ── DB helpers ── */
+const SETTINGS_ROW_ID = "site-settings-singleton";
+
+async function readFromDb(): Promise<SiteSettings> {
+  const { getDb, ensureDatabaseReady } = await import("./db");
+  const { sql } = await import("drizzle-orm");
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return { ...DEFAULT_SETTINGS };
+
+  const rows = await db.execute(
+    sql`select company_name, logo_data_url from site_settings where id = ${SETTINGS_ROW_ID}`,
+  );
+
+  const result = rows as unknown as Array<{ company_name: string; logo_data_url: string | null }>;
+  if (!result || result.length === 0) return { ...DEFAULT_SETTINGS };
+  return {
+    companyName: result[0].company_name,
+    logoDataUrl: result[0].logo_data_url ?? null,
+  };
+}
+
+async function writeToDb(settings: SiteSettings): Promise<void> {
+  const { getDb, ensureDatabaseReady } = await import("./db");
+  const { sql } = await import("drizzle-orm");
+  await ensureDatabaseReady();
+  const db = getDb();
+  if (!db) return;
+
+  await db.execute(
+    sql`insert into site_settings (id, company_name, logo_data_url, updated_at) values (${SETTINGS_ROW_ID}, ${settings.companyName}, ${settings.logoDataUrl}, now()) on duplicate key update company_name = values(company_name), logo_data_url = values(logo_data_url), updated_at = now()`,
+  );
+}
+
 /* ── Public API ── */
 
 export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
@@ -55,7 +89,7 @@ export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
     const store = await loadMockStore();
     return store.siteSettings ?? { ...DEFAULT_SETTINGS };
   }
-  return readFromFile();
+  return readFromDb();
 });
 
 export async function updateSiteSettings(
@@ -70,8 +104,8 @@ export async function updateSiteSettings(
     await saveMockStore(store);
     return next;
   }
-  const current = await readFromFile();
+  const current = await readFromDb();
   const next = { ...current, ...patch };
-  await writeToFile(next);
+  await writeToDb(next);
   return next;
 }

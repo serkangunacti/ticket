@@ -42,6 +42,7 @@ export default async function AccountPage(props: {
   const agentCreated = searchParams.agent === "created";
   const agentUpdated = searchParams.agent === "updated";
   const agentError = searchParams.error === "agent";
+  const lastOwnerError = searchParams.error === "last_owner";
 
   const isOwner = session.role === "owner";
   const isManager = session.role === "manager";
@@ -55,6 +56,9 @@ export default async function AccountPage(props: {
 
   const settings = await getSiteSettings();
   const basePath = `/ticket/${slugify(settings.companyName)}`;
+  const activeOwnerCount = agents.filter(
+    (a) => a.role === "owner" && a.isActive,
+  ).length;
 
   return (
     <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -157,6 +161,11 @@ export default async function AccountPage(props: {
               Ekip üyesi oluşturulamadı. Gerekli alanları kontrol edin.
             </div>
           ) : null}
+          {lastOwnerError ? (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">
+              Tek sahip hesabı pasife çekilemez. Önce başka bir sahip atayın.
+            </div>
+          ) : null}
 
           {/* Agent list */}
           <div className="space-y-2">
@@ -199,7 +208,11 @@ export default async function AccountPage(props: {
                     <form action={toggleSupportAgentStateAction}>
                       <input type="hidden" name="agentId" value={agent.id} />
                       <input type="hidden" name="isActive" value={agent.isActive ? "false" : "true"} />
-                      <button className={btnSecondary}>
+                      <button
+                        className={btnSecondary}
+                        disabled={agent.isActive && agent.role === "owner" && activeOwnerCount <= 1}
+                        title={agent.isActive && agent.role === "owner" && activeOwnerCount <= 1 ? "Tek sahip pasife çekilemez" : undefined}
+                      >
                         {agent.isActive ? "Pasif" : "Aktif"}
                       </button>
                     </form>
