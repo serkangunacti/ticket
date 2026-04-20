@@ -23,7 +23,7 @@ import { SectionLabel, Surface } from "@/components/ticket-ui";
 export const metadata: Metadata = {
   title: "Uptexx Ticket | Mail-First SaaS Ticket Platformu",
   description:
-    "Uptexx Ticket, paylaşımlı mailbox'tan otomatik ticket açılışı, tenant bazlı görünürlük, ekip yönetimi ve raporlama sağlayan satış odaklı SaaS ticket platformudur.",
+    "Uptexx Ticket, paylaşımlı mailbox'tan otomatik ticket açılışı, tenant bazlı görünürlük, ekip yönetimi ve raporlama sağlayan kurumsal SaaS ticket platformudur.",
 };
 
 const navItems = [
@@ -64,7 +64,7 @@ const capabilityCards = [
   },
   {
     title: "Tenant ve domain bazlı ayrışma",
-    body: "Her müşteriyi ayrı tenant mantığında izleyin, domain eşleşmesiyle ticket akışını temiz ve satılabilir bir yapı hâline getirin.",
+    body: "Her müşteri hesabını ayrı tenant mantığında yönetin; domain eşleşmesiyle ticket akışını temiz, izlenebilir ve düzenli tutun.",
     icon: Building2,
   },
   {
@@ -81,18 +81,18 @@ const capabilityCards = [
 
 const commercializationPoints = [
   {
-    title: "Net paketleme dili",
-    body: "Mailbox, tenant ve ekip hacmine göre anlaşılır lisans katmanları oluşturabilirsiniz.",
+    title: "Kurulum netliği",
+    body: "Mailbox, tenant ve ekip hacmine göre yapıyı kolayca planlayın; büyüme aşamalarını net biçimde görün.",
     width: "76%",
   },
   {
-    title: "Demo'da gösterilebilir değer",
-    body: "Dashboard, cevap hızı ve ticket hacmi ilk görüşmede ürün değerini görünür kılar.",
+    title: "Operasyon görünürlüğü",
+    body: "Dashboard, yanıt süresi ve ticket hacmi sayesinde destek operasyonunun ritmi tek ekranda izlenir.",
     width: "88%",
   },
   {
-    title: "Rapor satılabilirliği",
-    body: "PDF ve Excel export katmanı, operasyonu yalnızca izlemek değil müşteriye sunmak için de kullanılır.",
+    title: "Raporlama gücü",
+    body: "PDF ve Excel export katmanı, operasyon verisini düzenli müşteri görünürlüğüne dönüştürür.",
     width: "82%",
   },
 ];
@@ -121,7 +121,7 @@ const packageTiers = [
       "Gelişmiş tenant filtreleri ve mailbox senaryoları",
       "Audit log ve ekip aktivite görünürlüğü",
       "Aylık raporlama ve export akışı",
-      "Ürün demosu ve onboarding desteği",
+      "Onboarding ve canlıya geçiş desteği",
     ],
   },
   {
@@ -234,9 +234,9 @@ export default function TicketLandingPage() {
                 className="ticket-reveal mt-7 max-w-4xl text-[2.8rem] font-semibold leading-[0.95] tracking-[-0.04em] text-white sm:text-[3.8rem] lg:text-[5.3rem]"
                 style={{ animationDelay: "120ms" }}
               >
-                Müşteri destek süreçlerini
+                Kurumsal destek operasyonunuzu
                 <span className="mt-2 block bg-[linear-gradient(90deg,#9ae9ff_0%,#74cfff_52%,#ffffff_100%)] bg-clip-text text-transparent">
-                  satılabilir bir ürüne dönüştürün.
+                  tek merkezden yönetin.
                 </span>
               </h1>
 
@@ -246,8 +246,9 @@ export default function TicketLandingPage() {
               >
                 Uptexx Ticket; paylaşımlı mailbox&apos;tan otomatik ticket açılışı,
                 tenant bazlı görünürlük, ekip yönetimi, audit log ve dönemsel export
-                akışını tek ürün altında toplar. İç IT ekipleri, MSP yapıları ve dış
-                destek veren operasyon takımları için satışa hazır bir SaaS katmanıdır.
+                akışını tek platformda toplar. İç IT ekipleri, MSP yapıları ve dış
+                destek veren operasyon takımları için düzenli, izlenebilir ve
+                ölçeklenebilir bir çalışma alanı sunar.
               </p>
 
               <div
@@ -262,9 +263,9 @@ export default function TicketLandingPage() {
                 </a>
                 <a
                   href="https://www.uptexx.com/iletisim"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/12 bg-white/[0.07] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/12"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/16 bg-white px-6 py-3 text-sm font-semibold text-[#08131f] shadow-[0_10px_30px_rgba(0,0,0,0.16)] transition hover:-translate-y-0.5 hover:bg-[#f1f7fb] hover:text-[#08131f]"
                 >
-                  Demo talep et <ChevronRight className="h-4 w-4" />
+                  İletişime geç <ChevronRight className="h-4 w-4" />
                 </a>
               </div>
 
@@ -303,10 +304,10 @@ export default function TicketLandingPage() {
 
             <div className="relative mx-auto w-full max-w-[36rem]">
               <div className="ticket-float absolute -left-2 top-8 hidden rounded-full border border-[#9ae9ff]/30 bg-[#0d2943]/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#9ae9ff] shadow-[0_18px_40px_rgba(8,25,47,0.18)] lg:block">
-                14 günlük ürün demosu
+                hızlı kurulum akışı
               </div>
               <div className="ticket-float-delayed absolute -right-3 top-[6.5rem] hidden rounded-full border border-white/14 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white shadow-[0_18px_40px_rgba(8,25,47,0.18)] lg:block">
-                multi-tenant sahne
+                multi-tenant yapı
               </div>
 
               <div className="ticket-reveal relative overflow-hidden rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,24,40,0.96)_0%,rgba(12,29,47,0.94)_54%,rgba(18,48,84,0.94)_100%)] p-5 shadow-[0_40px_120px_rgba(4,12,22,0.45)] backdrop-blur-xl lg:p-6" style={{ animationDelay: "220ms" }}>
@@ -315,7 +316,7 @@ export default function TicketLandingPage() {
                 <div className="relative flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8fe9ff]">
-                      satış görünümü
+                      platform görünümü
                     </p>
                     <p className="mt-2 text-2xl font-semibold tracking-tight text-white">
                       Uptexx Ticket cockpit
@@ -451,7 +452,7 @@ export default function TicketLandingPage() {
                         <p className="mt-1">PDF ve Excel export</p>
                       </div>
                       <div className="rounded-full bg-[#113153] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
-                        müşteri hazır
+                        rapor hazır
                       </div>
                     </div>
                   </div>
@@ -469,12 +470,12 @@ export default function TicketLandingPage() {
               Ürün Anlatısı
             </SectionLabel>
             <h2 className="mt-6 text-3xl font-semibold tracking-tight text-[#16202a] md:text-[3.3rem] md:leading-[1.02]">
-              Destek paneli değil, doğrudan satılabilir bir ürün dili.
+              Dağınık destek operasyonunu tek platformda toplayan net ürün yapısı.
             </h2>
             <p className="mt-6 text-base leading-8 text-[#5f738c] md:text-lg">
-              Ticket anasayfası artık operasyon ekranı anlatmıyor; ürünü satın alacak
-              müşteriye net bir SaaS hikayesi sunuyor. Mail-first akış, tenant bazlı
-              görünürlük, ekip yönetimi ve raporlama katmanı tek anlatıda birleşiyor.
+              Uptexx Ticket; mail-first akış, tenant bazlı görünürlük, ekip yönetimi ve
+              raporlama katmanını tek anlatıda birleştirir. Böylece destek operasyonu
+              hem içeride düzenli yürür hem de müşteriye karşı daha şeffaf görünür.
             </p>
           </div>
 
@@ -507,12 +508,12 @@ export default function TicketLandingPage() {
                   Analitik katman
                 </SectionLabel>
                 <h3 className="mt-5 text-3xl font-semibold tracking-tight">
-                  Demo görüşmesinde gösterilecek net ürün görünürlüğü.
+                  Günlük operasyonu ve müşteri görünürlüğünü aynı anda izleyin.
                 </h3>
               </div>
 
               <div className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#c9d8e5]">
-                ürün + operasyon + rapor
+                operasyon + ekip + rapor
               </div>
             </div>
 
@@ -529,7 +530,7 @@ export default function TicketLandingPage() {
                   },
                   {
                     label: "Aylık export",
-                    value: "Rapor çıktısı satışa hazır",
+                    value: "Rapor çıktısı müşteriye hazır",
                   },
                 ].map((item) => (
                   <div key={item.label} className="rounded-[22px] border border-white/8 bg-white/[0.05] p-4">
@@ -544,9 +545,9 @@ export default function TicketLandingPage() {
               <div className="rounded-[26px] border border-white/8 bg-white/[0.05] p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-white">Paket değer matrisi</p>
+                    <p className="text-sm font-semibold text-white">Kullanım yoğunluğu matrisi</p>
                     <p className="mt-1 text-sm text-[#b9ccdc]">
-                      Ürünün satış konuşmasında en hızlı anlatılan katmanlar
+                      Ekiplerin en sık kullandığı katmanları tek sahnede görün
                     </p>
                   </div>
                   <LineChart className="h-5 w-5 text-[#8fe9ff]" />
@@ -557,7 +558,7 @@ export default function TicketLandingPage() {
                     <div key={item.title}>
                       <div className="flex items-center justify-between gap-4 text-sm">
                         <p className="font-medium text-white">{item.title}</p>
-                        <p className="text-[#8fe9ff]">hazır</p>
+                        <p className="text-[#8fe9ff]">aktif</p>
                       </div>
                       <p className="mt-1 text-sm leading-6 text-[#b9ccdc]">{item.body}</p>
                       <div className="ticket-beam mt-3 h-2 rounded-full bg-white/8">
@@ -578,13 +579,13 @@ export default function TicketLandingPage() {
               Neden Uptexx Ticket
             </SectionLabel>
             <h2 className="mt-6 text-3xl font-semibold tracking-tight text-[#16202a] md:text-4xl">
-              Satış ekibinin rahat anlatacağı, operasyon ekibinin rahat kullanacağı yapı.
+              Operasyon ekibinin hızını artıran, müşteriye güven veren yapı.
             </h2>
             <div className="mt-8 space-y-5">
               {[
                 {
                   title: "Mail-first alışkanlık korunur",
-                  body: "Müşteriyi portala taşımadan ticket süreci yönetilir; bu da ürünü anlatırken bariyeri düşürür.",
+                  body: "Müşteriyi yeni bir portala taşımadan ticket süreci yönetilir; e-posta alışkanlığı korunur.",
                   icon: Zap,
                 },
                 {
@@ -623,7 +624,7 @@ export default function TicketLandingPage() {
               Paketler
             </SectionLabel>
             <h2 className="mt-6 text-3xl font-semibold tracking-tight text-white md:text-[3.35rem] md:leading-[1.02]">
-              Uptexx Ticket paketlerini ilk görüşmede net biçimde gösterin.
+              İhtiyaca göre ölçeklenen Uptexx Ticket paketleri.
             </h2>
             <p className="mt-5 text-base leading-8 text-[#bed0df] md:text-lg">
               Paketler mailbox, tenant ve ekip hacmine göre örneklendirilmiştir. Uygun
@@ -670,10 +671,10 @@ export default function TicketLandingPage() {
                   className={`mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${
                     tier.highlight
                       ? "bg-[#8fe9ff] text-[#08131f]"
-                      : "border border-white/12 bg-white/8 text-white"
+                      : "border border-white/16 bg-white text-[#08131f] shadow-[0_10px_30px_rgba(0,0,0,0.14)] hover:bg-[#f2f7fb] hover:text-[#08131f]"
                   }`}
                 >
-                  Teklif iste <ArrowRight className="h-4 w-4" />
+                  Detayları konuşalım <ArrowRight className="h-4 w-4" />
                 </a>
               </article>
             ))}
@@ -688,7 +689,7 @@ export default function TicketLandingPage() {
               Sık Sorulanlar
             </SectionLabel>
             <h2 className="mt-6 text-3xl font-semibold tracking-tight text-[#16202a] md:text-4xl">
-              Satış görüşmesinde ilk turda gelen sorular için kısa cevaplar.
+              Ürünü değerlendirirken en çok sorulan başlıklar.
             </h2>
             <p className="mt-5 text-base leading-8 text-[#607285]">
               Bu bölüm, sayfaya gelen müşterinin ürünün nasıl konumlandığını hızlıca
@@ -735,15 +736,14 @@ export default function TicketLandingPage() {
             <div className="relative max-w-3xl">
               <div className="flex flex-wrap items-center gap-3 text-xs font-semibold uppercase tracking-[0.24em] text-[#9ae9ff]">
                 <Star className="h-4 w-4" />
-                satış odaklı ürün vitrini hazır
+                kurumsal ticket platformu
               </div>
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                Uptexx Ticket&apos;ı şimdi paketleriyle birlikte sunmaya başlayın.
+                Uptexx Ticket ile destek operasyonunuzu daha görünür ve daha kontrollü yönetin.
               </h2>
               <p className="mt-5 max-w-2xl text-base leading-8 text-[#d3e1ec]">
-                Müşteriniz sayfaya geldiğinde ürünü, paketleri ve görsel olarak güçlü
-                metrik anlatısını tek yerde görsün. Mevcut müşteriler için giriş akışı da
-                aynı sayfada korunur.
+                Paket yapısını inceleyin, ihtiyaçlarınıza uygun kurulum modelini birlikte
+                netleştirelim. Mevcut müşteriler için giriş akışı aynı sayfada korunur.
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -751,11 +751,11 @@ export default function TicketLandingPage() {
                   href="https://www.uptexx.com/iletisim"
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#08131f] transition hover:-translate-y-0.5"
                 >
-                  Demo görüşmesi planla <ArrowRight className="h-4 w-4" />
+                  İletişime geç <ArrowRight className="h-4 w-4" />
                 </a>
                 <Link
                   href="/ticket/login"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/12 bg-white/8 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/12"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/16 bg-white px-6 py-3 text-sm font-semibold text-[#08131f] shadow-[0_10px_30px_rgba(0,0,0,0.14)] transition hover:-translate-y-0.5 hover:bg-[#f2f7fb] hover:text-[#08131f]"
                 >
                   Mevcut müşteriyim <Clock3 className="h-4 w-4" />
                 </Link>
