@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { getPriorityLabel, getStatusLabel } from "@/lib/labels";
 import type { TicketPriority, TicketStatus } from "@/lib/types";
@@ -26,9 +26,11 @@ export function SectionLabel({
 export function Surface({
   children,
   className,
+  style,
 }: {
   children: ReactNode;
   className?: string;
+  style?: CSSProperties;
 }) {
   return (
     <div
@@ -36,6 +38,7 @@ export function Surface({
         "rounded-[26px] border border-[color:var(--line)] bg-[color:var(--panel)] p-5 shadow-[0_18px_48px_rgba(8,25,47,0.08)] backdrop-blur-xl",
         className,
       )}
+      style={style}
     >
       {children}
     </div>
