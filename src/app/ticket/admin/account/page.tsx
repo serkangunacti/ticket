@@ -97,8 +97,8 @@ export default async function AccountPage(props: {
       ) : null}
 
       {/* ── Password change (everyone) ─────────────── */}
-      <details className="rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
-        <summary className="flex cursor-pointer list-none items-center gap-2.5 px-5 py-4 marker:content-none [&::-webkit-details-marker]:hidden">
+      <details className="group rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
+        <summary className="flex cursor-pointer list-none items-center gap-2.5 px-5 py-4 [&::-webkit-details-marker]:hidden">
           <KeyRound className="h-4 w-4 text-[#37c2e8]" />
           <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
             Şifremi değiştir
@@ -197,9 +197,9 @@ export default async function AccountPage(props: {
           </div>
 
           {/* Add agent form */}
-          <details className="mt-4 rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-[#102038] marker:content-none">
-              <Plus className="h-3.5 w-3.5" /> Yeni ekip üyesi ekle
+          <details className="group/add mt-4 rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-[#102038] [&::-webkit-details-marker]:hidden">
+              <Plus className="h-3.5 w-3.5 transition-transform group-open/add:rotate-45" /> Yeni ekip üyesi ekle
             </summary>
             <div className="border-t border-[rgba(17,35,60,0.08)] px-4 pb-4 pt-3">
               <form action={createSupportAgentAction} className="grid gap-3 sm:grid-cols-2">
@@ -270,9 +270,9 @@ export default async function AccountPage(props: {
           </div>
 
           {/* Add tenant form */}
-          <details className="mt-4 rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-[#102038] marker:content-none">
-              <Plus className="h-3.5 w-3.5" /> Yeni tenant ekle
+          <details className="group/add mt-4 rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-semibold text-[#102038] [&::-webkit-details-marker]:hidden">
+              <Plus className="h-3.5 w-3.5 transition-transform group-open/add:rotate-45" /> Yeni tenant ekle
             </summary>
             <div className="border-t border-[rgba(17,35,60,0.08)] px-4 pb-4 pt-3">
               <form action={createTenantAction} className="grid gap-3 sm:grid-cols-2">

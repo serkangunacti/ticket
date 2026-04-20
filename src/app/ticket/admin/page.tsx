@@ -291,7 +291,7 @@ export default async function AdminDashboard(props: {
       {canCreateTicket ? (
         <Surface className={panelClass}>
           <details className="group">
-            <summary className="flex cursor-pointer list-none items-center gap-2.5 marker:content-none [&::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center gap-2.5 [&::-webkit-details-marker]:hidden">
               <PenLine className="h-4 w-4 text-[#133961]" />
               <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
                 Ticket oluştur
