@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
 
 import { HeaderBrand } from "@/components/header-brand";
 import { requireAdminSession } from "@/lib/auth";
@@ -17,17 +16,6 @@ export default async function AdminLayout({
   const settings = await getSiteSettings();
   const slug = slugify(settings.companyName);
   const basePath = `/ticket/${slug}`;
-
-  /* Ensure company_slug cookie is always set (e.g. first visit after deploy) */
-  const cookieStore = await cookies();
-  if (cookieStore.get("company_slug")?.value !== slug) {
-    cookieStore.set("company_slug", slug, {
-      httpOnly: false,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-    });
-  }
 
   return (
     <div className="min-h-screen text-[#102038]">

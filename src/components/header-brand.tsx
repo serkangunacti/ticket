@@ -78,7 +78,14 @@ export function HeaderBrand({
       }
       await updateAction(fd);
       setEditing(false);
-      window.location.reload();
+      /* Navigate to the new slug URL so the address bar reflects the change */
+      const newSlug =
+        name
+          .trim()
+          .replace(/\s+/g, "_")
+          .replace(/[^a-zA-Z0-9_çÇğĞıİöÖşŞüÜ\u0080-\uFFFF-]/g, "") ||
+        "admin";
+      window.location.href = `/ticket/${newSlug}`;
     } finally {
       setSaving(false);
     }

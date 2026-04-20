@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { ZoomIn, ZoomOut } from "lucide-react";
 
 type Props = {
   src: string;
@@ -8,7 +9,7 @@ type Props = {
   onCancel: () => void;
 };
 
-const CONTAINER = 220;
+const CONTAINER = 280;
 const OUTPUT = 128;
 
 export function ImageCropper({ src, onCrop, onCancel }: Props) {
@@ -23,11 +24,19 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
     oy: number;
   } | null>(null);
 
+  /* Load image and center it initially */
   useEffect(() => {
     const img = new Image();
     img.onload = () => {
       imgRef.current = img;
       setNatural({ w: img.naturalWidth, h: img.naturalHeight });
+      const bs = Math.max(
+        CONTAINER / img.naturalWidth,
+        CONTAINER / img.naturalHeight,
+      );
+      const dw = img.naturalWidth * bs;
+      const dh = img.naturalHeight * bs;
+      setPos({ x: (CONTAINER - dw) / 2, y: (CONTAINER - dh) / 2 });
     };
     img.src = src;
   }, [src]);
@@ -38,6 +47,7 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
 
   const startDrag = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
+      e.preventDefault();
       const p = "touches" in e ? e.touches[0] : e;
       dragRef.current = {
         sx: p.clientX,
@@ -91,14 +101,24 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
       onClick={onCancel}
     >
       <div
-        className="w-[300px] rounded-2xl bg-[#0f2745] p-5 shadow-2xl"
+        className="w-[340px] rounded-2xl bg-[#0f2745] p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="mb-4 text-sm font-semibold text-white">Logoyu kırpın</p>
+        <p className="mb-4 text-sm font-semibold text-white">
+          Logoyu kırpın
+        </p>
+        <p className="mb-3 text-xs text-white/40">
+          Görüntüyü sürükleyerek konumlandırın
+        </p>
 
         <div
-          className="relative mx-auto cursor-move overflow-hidden rounded-xl border border-white/20"
-          style={{ width: CONTAINER, height: CONTAINER }}
+          className="relative mx-auto cursor-move overflow-hidden rounded-xl border border-white/15"
+          style={{
+            width: CONTAINER,
+            height: CONTAINER,
+            background:
+              "repeating-conic-gradient(#1a3a5c 0% 25%, #0f2745 0% 50%) 50% / 20px 20px",
+          }}
           onMouseDown={startDrag}
           onMouseMove={onMove}
           onMouseUp={endDrag}
@@ -112,32 +132,32 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
             src={src}
             alt=""
             draggable={false}
-            className="pointer-events-none select-none"
+            className="pointer-events-none absolute left-0 top-0 select-none"
             style={{
               width: dispW,
               height: dispH,
               transform: `translate(${pos.x}px, ${pos.y}px)`,
             }}
           />
-          {/* Center crosshair overlay */}
-          <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-white/30 rounded-xl" />
+          {/* Crop frame overlay */}
+          <div className="pointer-events-none absolute inset-0 rounded-xl border-2 border-dashed border-white/25" />
         </div>
 
-        <div className="mt-3 flex items-center gap-3 text-xs text-white/60">
-          <span>−</span>
+        <div className="mt-4 flex items-center gap-3 text-white/50">
+          <ZoomOut className="h-4 w-4 shrink-0" />
           <input
             type="range"
             min="1"
-            max="3"
+            max="4"
             step="0.05"
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
             className="flex-1 accent-[#37c2e8]"
           />
-          <span>+</span>
+          <ZoomIn className="h-4 w-4 shrink-0" />
         </div>
 
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-5 flex justify-end gap-2">
           <button
             onClick={onCancel}
             className="rounded-lg px-4 py-2 text-sm text-white/50 transition hover:bg-white/10 hover:text-white/80"
