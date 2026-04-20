@@ -12,6 +12,8 @@ import {
   LayoutDashboard,
   LineChart,
   Mail,
+  MapPin,
+  Phone,
   ShieldCheck,
   Sparkles,
   Star,
@@ -31,6 +33,33 @@ const navItems = [
   { href: "#neden", label: "Neden" },
   { href: "#paketler", label: "Paketler" },
   { href: "#sss", label: "SSS" },
+];
+
+const footerQuickLinks = [
+  ...navItems,
+  { href: "/ticket/login", label: "Yönetim Girişi" },
+  { href: "https://www.uptexx.com", label: "uptexx.com" },
+];
+
+const footerPlatformLinks = [
+  "Mail-first ticket akışı",
+  "Tenant ve domain görünürlüğü",
+  "Rol bazlı ekip yönetimi",
+  "Audit log ve aktivite izi",
+  "PDF ve Excel export",
+  "Guided onboarding",
+];
+
+const footerOffices = [
+  {
+    label: "Merkez Ofis",
+    value: "Cumhuriyet Mah. Kazım Karabekir Cad. No:2/28 61800 Beşikdüzü/Trabzon",
+  },
+  {
+    label: "İstanbul Şube",
+    value:
+      "Fatih Sultan Mehmet Mah. Depoyolu Sk. No:16 İç Kapı No:58, One Block Plaza 34774 Ümraniye/İstanbul",
+  },
 ];
 
 const integrationPills = [
@@ -216,14 +245,14 @@ const heroSignalColumns = [
 
 export default function TicketLandingPage() {
   return (
-    <main className="relative overflow-hidden bg-[linear-gradient(180deg,#06111d_0%,#08111d_32%,#091726_68%,#07111b_100%)] text-white">
+    <main data-ticket-landing className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#0a1725_0%,#0c1c2c_30%,#102338_68%,#0c1928_100%)] text-white">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 top-0 h-[48rem] bg-[radial-gradient(circle_at_16%_0%,rgba(85,211,244,0.18),transparent_28%),radial-gradient(circle_at_82%_8%,rgba(36,93,255,0.22),transparent_24%),radial-gradient(circle_at_50%_24%,rgba(13,127,199,0.12),transparent_30%)]" />
+        <div className="absolute inset-x-0 top-0 h-[48rem] bg-[radial-gradient(circle_at_16%_0%,rgba(85,211,244,0.22),transparent_30%),radial-gradient(circle_at_82%_8%,rgba(36,93,255,0.24),transparent_26%),radial-gradient(circle_at_50%_24%,rgba(13,127,199,0.14),transparent_32%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,transparent_18%,transparent_82%,rgba(255,255,255,0.01)_100%)]" />
       </div>
 
       <div className="relative">
-      <section className="relative overflow-hidden text-white">
+        <section className="relative overflow-hidden text-white">
         <div className="ticket-ambient-grid grain-overlay pointer-events-none absolute inset-0 opacity-50" />
         <div className="pointer-events-none absolute inset-0">
           <div className="ticket-orb absolute left-[-5rem] top-[4.5rem] h-72 w-72 rounded-full bg-[#55d3f4]/16 blur-3xl" />
@@ -252,41 +281,49 @@ export default function TicketLandingPage() {
         </div>
 
         <div className="mx-auto w-full max-w-7xl px-6 pb-24 pt-6 lg:px-10 lg:pb-28">
-          <header className="ticket-reveal flex items-center justify-between gap-6 py-4">
-            <Link href="/ticket" className="flex items-center gap-4" aria-label="Uptexx Ticket anasayfa">
-              <span className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-2 shadow-[0_20px_60px_rgba(8,25,47,0.22)] backdrop-blur-xl">
-                <Image
-                  src="/uptexxlogo.png"
-                  alt="Uptexx Logo"
-                  width={164}
-                  height={58}
-                  className="h-10 w-auto"
-                  priority
-                />
-              </span>
-              <span className="hidden text-xs font-semibold uppercase tracking-[0.28em] text-[#b3cbde] sm:block">
-                Ticket SaaS
-              </span>
-            </Link>
-
-            <nav className="hidden items-center gap-7 text-sm text-[#b3cbde] xl:flex">
-              {navItems.map((item) => (
-                <a key={item.href} href={item.href} className="transition hover:text-white">
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <a
-                href="#paketler"
-                className="hidden rounded-full border border-[#365474] bg-[#11253f]/84 px-4 py-2 text-sm font-medium text-white transition hover:border-[#67d7f5]/38 hover:bg-[#16314e] sm:inline-flex"
-              >
-                Paketler
-              </a>
+          <header className="ticket-reveal flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center justify-between gap-4">
+              <Link href="/ticket" className="flex items-center gap-4" aria-label="Uptexx Ticket anasayfa">
+                <span className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-2 shadow-[0_20px_60px_rgba(8,25,47,0.22)] backdrop-blur-xl">
+                  <Image
+                    src="/uptexxlogo.png"
+                    alt="Uptexx Logo"
+                    width={164}
+                    height={58}
+                    className="h-10 w-auto"
+                    priority
+                  />
+                </span>
+                <span className="hidden text-xs font-semibold uppercase tracking-[0.28em] text-[#b3cbde] sm:block">
+                  Ticket SaaS
+                </span>
+              </Link>
               <Link
                 href="/ticket/login"
-                className="inline-flex rounded-full border border-[#67d7f5]/28 bg-[linear-gradient(135deg,#0f263f_0%,#15406b_52%,#205aa8_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(3,10,18,0.25)] transition hover:-translate-y-0.5 hover:border-[#8fe9ff]/42"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#7fdcf7]/28 bg-[linear-gradient(135deg,#16314d_0%,#1a4771_55%,#2e6dba_100%)] px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(3,10,18,0.25)] transition hover:-translate-y-0.5 hover:border-[#8fe9ff]/42 lg:hidden"
+              >
+                Yönetim Girişi
+              </Link>
+            </div>
+
+            <nav className="ticket-scroll-strip order-3 -mx-1 w-[calc(100%+0.5rem)] overflow-x-auto pb-1 lg:order-2 lg:mx-0 lg:w-auto lg:flex-1 lg:pb-0">
+              <div className="flex w-max gap-2 pr-2 lg:mx-auto lg:w-auto">
+                {navItems.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.07] px-4 py-2 text-sm font-semibold text-[#d7e4ef] shadow-[0_12px_30px_rgba(0,0,0,0.14)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-[#8fe9ff]/34 hover:bg-white/[0.11] hover:text-white"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            </nav>
+
+            <div className="hidden items-center gap-3 lg:flex">
+              <Link
+                href="/ticket/login"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#7fdcf7]/28 bg-[linear-gradient(135deg,#16314d_0%,#1a4771_55%,#2e6dba_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(3,10,18,0.25)] transition hover:-translate-y-0.5 hover:border-[#8fe9ff]/42"
               >
                 Yönetim Girişi
               </Link>
@@ -375,11 +412,11 @@ export default function TicketLandingPage() {
               <div className="ticket-float absolute -left-2 top-8 hidden rounded-full border border-[#9ae9ff]/30 bg-[#0d2943]/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[#9ae9ff] shadow-[0_18px_40px_rgba(8,25,47,0.18)] lg:block">
                 hızlı kurulum akışı
               </div>
-              <div className="ticket-float-delayed absolute -right-3 top-[6.5rem] hidden rounded-full border border-white/14 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white shadow-[0_18px_40px_rgba(8,25,47,0.18)] lg:block">
+              <div className="ticket-float-delayed absolute -right-3 top-[6.5rem] hidden rounded-full border border-white/14 bg-white/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white shadow-[0_18px_40px_rgba(8,25,47,0.18)] lg:block">
                 multi-tenant yapı
               </div>
 
-              <div className="ticket-reveal relative overflow-hidden rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,24,40,0.96)_0%,rgba(12,29,47,0.94)_54%,rgba(18,48,84,0.94)_100%)] p-5 shadow-[0_40px_120px_rgba(4,12,22,0.45)] backdrop-blur-xl lg:p-6" style={{ animationDelay: "220ms" }}>
+              <div className="ticket-reveal relative overflow-hidden rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,32,51,0.94)_0%,rgba(17,39,63,0.92)_54%,rgba(27,62,102,0.92)_100%)] p-5 shadow-[0_40px_120px_rgba(4,12,22,0.45)] backdrop-blur-xl lg:p-6" style={{ animationDelay: "220ms" }}>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(121,220,247,0.16),_transparent_36%),radial-gradient(circle_at_80%_20%,_rgba(50,99,255,0.18),_transparent_32%)]" />
 
                 <div className="relative flex items-center justify-between">
@@ -391,7 +428,7 @@ export default function TicketLandingPage() {
                       Uptexx Ticket cockpit
                     </p>
                   </div>
-                  <div className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-xs font-semibold text-[#d6e7f5]">
+                  <div className="rounded-full border border-white/12 bg-white/10 px-3 py-1 text-xs font-semibold text-[#d6e7f5]">
                     Growth paketi
                   </div>
                 </div>
@@ -404,7 +441,7 @@ export default function TicketLandingPage() {
                   ].map((item, index) => (
                     <div
                       key={item.label}
-                      className="rounded-[22px] border border-white/8 bg-white/[0.04] p-4 backdrop-blur-md"
+                      className="rounded-[22px] border border-white/8 bg-white/[0.07] p-4 backdrop-blur-md"
                       style={{ animationDelay: `${index * 80}ms` }}
                     >
                       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
@@ -418,13 +455,13 @@ export default function TicketLandingPage() {
                 </div>
 
                 <div className="relative mt-4 grid gap-4 lg:grid-cols-[1.18fr_0.82fr]">
-                  <div className="rounded-[28px] border border-white/8 bg-[#091422]/78 p-4">
+                  <div className="rounded-[28px] border border-white/8 bg-[#102235]/74 p-4">
                     <div className="flex items-center justify-between text-sm text-[#b7cada]">
                       <span className="font-semibold text-white">Aylık ticket hacmi</span>
                       <span>Son 6 dönem</span>
                     </div>
 
-                    <div className="relative mt-5 h-52 overflow-hidden rounded-[24px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,rgba(255,255,255,0.01)_100%)] p-4">
+                      <div className="relative mt-5 h-52 overflow-hidden rounded-[24px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.02)_100%)] p-4">
                       <div className="absolute inset-x-4 bottom-4 top-8 flex items-end gap-3">
                         {chartBars.map((bar, index) => (
                           <div key={chartLabels[index]} className="ticket-bar flex-1">
@@ -473,7 +510,7 @@ export default function TicketLandingPage() {
                     {pipelineItems.map((item, index) => (
                       <div
                         key={item.label}
-                        className="rounded-[24px] border border-white/8 bg-white/[0.04] p-4"
+                        className="rounded-[24px] border border-white/8 bg-white/[0.06] p-4"
                         style={{ animationDelay: `${index * 70}ms` }}
                       >
                         <div className="flex items-center justify-between gap-3">
@@ -492,7 +529,7 @@ export default function TicketLandingPage() {
                 </div>
 
                 <div className="relative mt-4 grid gap-4 md:grid-cols-2">
-                  <div className="rounded-[24px] border border-white/8 bg-white/[0.04] p-4">
+                  <div className="rounded-[24px] border border-white/8 bg-white/[0.06] p-4">
                     <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-[#8fe9ff]">
                       ekip akışı
                     </p>
@@ -504,14 +541,14 @@ export default function TicketLandingPage() {
                         "invite",
                         "audit",
                       ].map((item) => (
-                        <span key={item} className="rounded-full border border-white/10 bg-white/8 px-3 py-1.5">
+                        <span key={item} className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5">
                           {item}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-[24px] border border-white/8 bg-white/[0.04] p-4">
+                  <div className="rounded-[24px] border border-white/8 bg-white/[0.06] p-4">
                     <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-[#8fe9ff]">
                       raporlama katmanı
                     </p>
@@ -520,7 +557,7 @@ export default function TicketLandingPage() {
                         <p className="text-2xl font-semibold text-white">2 format</p>
                         <p className="mt-1">PDF ve Excel export</p>
                       </div>
-                      <div className="rounded-full bg-[#113153] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
+                      <div className="rounded-full bg-[#1a4a7c] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
                         rapor hazır
                       </div>
                     </div>
@@ -530,7 +567,7 @@ export default function TicketLandingPage() {
             </div>
           </div>
         </div>
-      </section>
+        </section>
 
       <section id="urun" className="relative mx-auto w-full max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
         <div className="grid gap-10 lg:grid-cols-[0.88fr_1.12fr]">
@@ -552,7 +589,7 @@ export default function TicketLandingPage() {
             {capabilityCards.map((card, index) => (
               <Surface
                 key={card.title}
-                className="ticket-reveal !border-white/10 !bg-white/[0.04] !shadow-[0_18px_48px_rgba(0,0,0,0.18)] p-6"
+                className="ticket-reveal !border-white/10 !bg-white/[0.06] !shadow-[0_18px_48px_rgba(0,0,0,0.18)] p-6"
                 style={{ animationDelay: `${120 + index * 70}ms` } as React.CSSProperties}
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#0d2a43_0%,#173d62_100%)] text-[#8fe9ff]">
@@ -568,9 +605,9 @@ export default function TicketLandingPage() {
         </div>
       </section>
 
-      <section id="neden" className="border-y border-white/8 bg-white/[0.02]">
+      <section id="neden" className="border-y border-white/8 bg-white/[0.03]">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 py-20 lg:grid-cols-[1.04fr_0.96fr] lg:px-10">
-          <Surface className="ticket-reveal overflow-hidden rounded-[30px] border-none bg-[linear-gradient(180deg,#081321_0%,#122840_100%)] p-7 text-white shadow-[0_32px_90px_rgba(7,17,29,0.18)]">
+          <Surface className="ticket-reveal overflow-hidden rounded-[30px] border-none bg-[linear-gradient(180deg,#0d2236_0%,#183553_100%)] p-7 text-white shadow-[0_32px_90px_rgba(7,17,29,0.18)]">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <SectionLabel className="border-white/12 bg-white/8 text-[#8fe9ff]">
@@ -602,7 +639,7 @@ export default function TicketLandingPage() {
                     value: "Rapor çıktısı müşteriye hazır",
                   },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-[22px] border border-white/8 bg-white/[0.05] p-4">
+                  <div key={item.label} className="rounded-[22px] border border-white/8 bg-white/[0.07] p-4">
                     <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#8fe9ff]">
                       {item.label}
                     </p>
@@ -611,7 +648,7 @@ export default function TicketLandingPage() {
                 ))}
               </div>
 
-              <div className="rounded-[26px] border border-white/8 bg-white/[0.05] p-5">
+              <div className="rounded-[26px] border border-white/8 bg-white/[0.07] p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-white">Kullanım yoğunluğu matrisi</p>
@@ -668,7 +705,7 @@ export default function TicketLandingPage() {
                   icon: BarChart3,
                 },
               ].map((item) => (
-                <div key={item.title} className="flex items-start gap-4 rounded-[24px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_12px_30px_rgba(0,0,0,0.16)] backdrop-blur-xl">
+                <div key={item.title} className="flex items-start gap-4 rounded-[24px] border border-white/10 bg-white/[0.06] p-5 shadow-[0_12px_30px_rgba(0,0,0,0.16)] backdrop-blur-xl">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,#0d2a43_0%,#173d62_100%)] text-[#8fe9ff]">
                     <item.icon className="h-5 w-5" />
                   </div>
@@ -707,8 +744,8 @@ export default function TicketLandingPage() {
                 key={tier.name}
                 className={`ticket-reveal flex h-full flex-col rounded-[28px] border p-7 shadow-[0_24px_60px_rgba(0,0,0,0.22)] backdrop-blur-xl ${
                   tier.highlight
-                    ? "border-[#67d7f5]/34 bg-[linear-gradient(180deg,rgba(20,53,90,0.72)_0%,rgba(12,31,53,0.92)_100%)]"
-                    : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.03)_100%)]"
+                    ? "border-[#67d7f5]/34 bg-[linear-gradient(180deg,rgba(26,64,104,0.76)_0%,rgba(15,37,61,0.92)_100%)]"
+                    : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.05)_100%)]"
                 }`}
                 style={{ animationDelay: `${120 + index * 70}ms` }}
               >
@@ -780,7 +817,7 @@ export default function TicketLandingPage() {
             ))}
           </div>
 
-          <div className="ticket-reveal mt-8 rounded-[28px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_16px_38px_rgba(0,0,0,0.18)]">
+          <div className="ticket-reveal mt-8 rounded-[28px] border border-white/10 bg-white/[0.06] p-6 shadow-[0_16px_38px_rgba(0,0,0,0.18)]">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-sm">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#8fe9ff]">
@@ -825,7 +862,7 @@ export default function TicketLandingPage() {
             {faqs.map((item, index) => (
               <Surface
                 key={item.question}
-                className="ticket-reveal !border-white/10 !bg-white/[0.04] !shadow-[0_18px_48px_rgba(0,0,0,0.18)] p-6"
+                className="ticket-reveal !border-white/10 !bg-white/[0.06] !shadow-[0_18px_48px_rgba(0,0,0,0.18)] p-6"
                 style={{ animationDelay: `${120 + index * 70}ms` } as React.CSSProperties}
               >
                 <div className="flex items-start gap-4">
@@ -847,7 +884,7 @@ export default function TicketLandingPage() {
 
       <section className="pb-24">
         <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
-          <div className="ticket-reveal relative overflow-hidden rounded-[34px] bg-[linear-gradient(135deg,#0a1624_0%,#112846_55%,#1a5cc8_100%)] px-7 py-8 text-white shadow-[0_38px_100px_rgba(8,25,47,0.22)] sm:px-10 sm:py-10">
+          <div className="ticket-reveal relative overflow-hidden rounded-[34px] bg-[linear-gradient(135deg,#13263c_0%,#1a3a60_55%,#2d71d4_100%)] px-7 py-8 text-white shadow-[0_38px_100px_rgba(8,25,47,0.22)] sm:px-10 sm:py-10">
             <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[38%] bg-[radial-gradient(circle_at_center,_rgba(143,233,255,0.28),_transparent_58%)] lg:block" />
             <Image
               src="/uptexxlogo.png"
@@ -888,6 +925,129 @@ export default function TicketLandingPage() {
           </div>
         </div>
       </section>
+
+      <footer className="relative overflow-hidden border-t border-white/10 bg-[linear-gradient(180deg,rgba(20,35,52,0.58)_0%,rgba(12,23,35,0.96)_100%)]" role="contentinfo">
+        <div className="ticket-ambient-grid pointer-events-none absolute inset-0 opacity-20" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_18%_0%,rgba(143,233,255,0.16),transparent_36%),radial-gradient(circle_at_82%_10%,rgba(43,127,218,0.16),transparent_30%)]" />
+
+        <div className="relative mx-auto w-full max-w-7xl px-6 py-16 lg:px-10">
+          <div className="grid gap-10 md:grid-cols-2 xl:grid-cols-[1.1fr_0.78fr_0.82fr_1.1fr]">
+            <div className="space-y-6">
+              <a href="https://www.uptexx.com" className="flex w-fit items-center gap-4">
+                <span className="rounded-[22px] border border-white/12 bg-white/[0.08] px-4 py-2 shadow-[0_20px_60px_rgba(8,25,47,0.16)] backdrop-blur-xl">
+                  <Image
+                    src="/uptexxlogo.png"
+                    alt="Uptexx Logo"
+                    width={164}
+                    height={58}
+                    className="h-10 w-auto"
+                  />
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-[0.28em] text-[#b3cbde]">
+                  Ticket SaaS
+                </span>
+              </a>
+
+              <p className="max-w-sm text-sm leading-7 text-[#9fb5c8]">
+                Uptexx Ticket; mail-first ticket akışını, ekip organizasyonunu ve müşteri
+                görünürlüğünü tek ürün içinde toplayan kurumsal destek platformudur.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="https://www.uptexx.com"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-semibold text-[#d7e5ef] transition hover:-translate-y-0.5 hover:border-[#8fe9ff]/34 hover:bg-white/[0.12]"
+                >
+                  Kurumsal site
+                </a>
+                <a
+                  href="https://www.uptexx.com/iletisim"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#8fe9ff]/20 bg-[#15314f] px-4 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#1b4168]"
+                >
+                  İletişim
+                </a>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8ea9bd]">
+                Sayfa
+              </h3>
+              <ul className="space-y-2.5">
+                {footerQuickLinks.map((link) => (
+                  <li key={link.label}>
+                    <a
+                      href={link.href}
+                      className="group inline-flex items-center gap-2 text-sm text-[#d7e5ef] transition hover:text-white"
+                    >
+                      <span className="h-0.5 w-0 rounded-full bg-[#8fe9ff] transition-all duration-200 group-hover:w-3" />
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8ea9bd]">
+                Platform
+              </h3>
+              <ul className="space-y-2.5">
+                {footerPlatformLinks.map((item) => (
+                  <li key={item} className="text-sm text-[#9fb5c8]">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8ea9bd]">
+                İletişim
+              </h3>
+
+              <div className="space-y-4">
+                {footerOffices.map((office) => (
+                  <div key={office.label} className="flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.06] text-[#8fe9ff]">
+                      <MapPin className="h-4 w-4" />
+                    </div>
+                    <div className="text-sm leading-6 text-[#9fb5c8]">
+                      <span className="mb-0.5 block text-xs font-semibold uppercase tracking-[0.18em] text-[#d7e5ef]">
+                        {office.label}
+                      </span>
+                      {office.value}
+                    </div>
+                  </div>
+                ))}
+
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.06] text-[#8fe9ff]">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <a href="mailto:info@uptexx.com" className="text-sm text-[#d7e5ef] transition hover:text-white">
+                    info@uptexx.com
+                  </a>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.06] text-[#8fe9ff]">
+                    <Phone className="h-4 w-4" />
+                  </div>
+                  <a href="tel:+905438716131" className="text-sm text-[#d7e5ef] transition hover:text-white">
+                    0543 871 61 31
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-5 text-xs text-[#8ea9bd] sm:flex-row sm:items-center sm:justify-between">
+            <p>© 2026 Uptexx. Tüm hakları saklıdır.</p>
+            <p>Uptexx Ticket, kurumsal destek operasyonları için tasarlanmıştır.</p>
+          </div>
+        </div>
+      </footer>
       </div>
     </main>
   );
