@@ -236,6 +236,7 @@ const faqs = [
 const chartBars = [42, 58, 70, 88, 76, 96];
 const chartLabels = ["Oca", "Şub", "Mar", "Nis", "May", "Haz"];
 const chartLinePath = "M10,92 L48,78 L86,66 L124,40 L162,55 L210,24";
+const chartAreaPath = "M10,92 L48,78 L86,66 L124,40 L162,55 L210,24 L210,110 L10,110 Z";
 const chartLineDots = [
   { x: 10, y: 92 },
   { x: 48, y: 78 },
@@ -477,7 +478,6 @@ export default function TicketLandingPage() {
                     </div>
 
                       <div className="relative mt-5 h-52 overflow-hidden rounded-[24px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0.02)_100%)] p-4">
-                      <div className="ticket-chart-scan absolute inset-y-2 left-[-28%] w-[36%]" />
                       <div className="absolute inset-x-4 bottom-4 top-8 flex items-end gap-3">
                         {chartBars.map((bar, index) => (
                           <div key={chartLabels[index]} className="ticket-bar flex-1">
@@ -496,6 +496,18 @@ export default function TicketLandingPage() {
                         className="pointer-events-none absolute inset-x-4 top-10 h-[120px] w-[calc(100%-2rem)]"
                         aria-hidden="true"
                       >
+                        <defs>
+                          <linearGradient id="ticket-chart-area-gradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgba(143, 233, 255, 0.28)" />
+                            <stop offset="100%" stopColor="rgba(143, 233, 255, 0.02)" />
+                          </linearGradient>
+                          <linearGradient id="ticket-chart-line-gradient" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#7bdff8" />
+                            <stop offset="58%" stopColor="#dcf7ff" />
+                            <stop offset="100%" stopColor="#5caeff" />
+                          </linearGradient>
+                        </defs>
+                        <path d={chartAreaPath} fill="url(#ticket-chart-area-gradient)" className="ticket-chart-area" />
                         <path
                           d={chartLinePath}
                           fill="none"
@@ -508,11 +520,20 @@ export default function TicketLandingPage() {
                         <path
                           d={chartLinePath}
                           fill="none"
-                          stroke="#ffffff"
+                          stroke="url(#ticket-chart-line-gradient)"
                           strokeWidth="3"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           className="ticket-chart-line"
+                        />
+                        <path
+                          d={chartLinePath}
+                          fill="none"
+                          stroke="#dcf7ff"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="ticket-chart-line-trace"
                         />
                         {chartLineDots.map((dot, index) => (
                           <circle
@@ -525,9 +546,6 @@ export default function TicketLandingPage() {
                             style={{ animationDelay: `${index * 220}ms` }}
                           />
                         ))}
-                        <circle r="4.5" fill="#dcf7ff" className="ticket-chart-orb">
-                          <animateMotion dur="6s" repeatCount="indefinite" path={chartLinePath} />
-                        </circle>
                       </svg>
 
                       <div className="absolute inset-x-4 bottom-0 flex justify-between text-[11px] uppercase tracking-[0.22em] text-[#7391ab]">
