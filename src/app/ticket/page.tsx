@@ -281,8 +281,8 @@ export default function TicketLandingPage() {
         </div>
 
         <div className="mx-auto w-full max-w-7xl px-6 pb-24 pt-6 lg:px-10 lg:pb-28">
-          <header className="ticket-reveal flex flex-col gap-4 py-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center justify-between gap-4">
+          <header className="ticket-reveal grid grid-cols-[1fr_auto] items-center gap-4 py-4 lg:grid-cols-[auto_1fr_auto]">
+            <div className="flex min-w-0 items-center gap-4">
               <Link href="/ticket" className="flex items-center gap-4" aria-label="Uptexx Ticket anasayfa">
                 <span className="rounded-[22px] border border-white/12 bg-white/10 px-4 py-2 shadow-[0_20px_60px_rgba(8,25,47,0.22)] backdrop-blur-xl">
                   <Image
@@ -306,8 +306,8 @@ export default function TicketLandingPage() {
               </Link>
             </div>
 
-            <nav className="ticket-scroll-strip order-3 -mx-1 w-[calc(100%+0.5rem)] overflow-x-auto pb-1 lg:order-2 lg:mx-0 lg:w-auto lg:flex-1 lg:pb-0">
-              <div className="flex w-max gap-2 pr-2 lg:mx-auto lg:w-auto">
+            <nav className="ticket-scroll-strip col-span-2 -mx-1 w-[calc(100%+0.5rem)] overflow-x-auto pb-1 lg:col-span-1 lg:col-start-2 lg:mx-0 lg:w-full lg:pb-0">
+              <div className="flex w-max gap-2 pr-2 lg:mx-auto lg:w-fit lg:pr-0">
                 {navItems.map((item) => (
                   <a
                     key={item.href}
@@ -320,7 +320,7 @@ export default function TicketLandingPage() {
               </div>
             </nav>
 
-            <div className="hidden items-center gap-3 lg:flex">
+            <div className="hidden items-center gap-3 lg:flex lg:justify-self-end">
               <Link
                 href="/ticket/login"
                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-[#7fdcf7]/28 bg-[linear-gradient(135deg,#16314d_0%,#1a4771_55%,#2e6dba_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(3,10,18,0.25)] transition hover:-translate-y-0.5 hover:border-[#8fe9ff]/42"
