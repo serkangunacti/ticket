@@ -51,34 +51,44 @@ async function writeToFile(settings: SiteSettings): Promise<void> {
 const SETTINGS_ROW_ID = "site-settings-singleton";
 
 async function readFromDb(): Promise<SiteSettings> {
-  const { getDb, ensureDatabaseReady } = await import("./db");
-  const { sql } = await import("drizzle-orm");
-  await ensureDatabaseReady();
-  const db = getDb();
-  if (!db) return { ...DEFAULT_SETTINGS };
+  try {
+    const { getDb, ensureDatabaseReady } = await import("./db");
+    const { sql } = await import("drizzle-orm");
+    await ensureDatabaseReady();
+    const db = getDb();
+    if (!db) return { ...DEFAULT_SETTINGS };
 
-  const rows = await db.execute(
-    sql`select company_name, logo_data_url from site_settings where id = ${SETTINGS_ROW_ID}`,
-  );
+    const raw = await db.execute(
+      sql`select company_name, logo_data_url from site_settings where id = ${SETTINGS_ROW_ID}`,
+    );
 
-  const result = rows as unknown as Array<{ company_name: string; logo_data_url: string | null }>;
-  if (!result || result.length === 0) return { ...DEFAULT_SETTINGS };
-  return {
-    companyName: result[0].company_name,
-    logoDataUrl: result[0].logo_data_url ?? null,
-  };
+    /* drizzle + mysql2 returns [rows, fields] */
+    const rows = Array.isArray(raw) && Array.isArray(raw[0]) ? raw[0] : raw;
+    const result = rows as unknown as Array<{ company_name: string; logo_data_url: string | null }>;
+    if (!result || result.length === 0) return { ...DEFAULT_SETTINGS };
+    return {
+      companyName: result[0].company_name ?? DEFAULT_SETTINGS.companyName,
+      logoDataUrl: result[0].logo_data_url ?? null,
+    };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
 }
 
 async function writeToDb(settings: SiteSettings): Promise<void> {
-  const { getDb, ensureDatabaseReady } = await import("./db");
-  const { sql } = await import("drizzle-orm");
-  await ensureDatabaseReady();
-  const db = getDb();
-  if (!db) return;
+  try {
+    const { getDb, ensureDatabaseReady } = await import("./db");
+    const { sql } = await import("drizzle-orm");
+    await ensureDatabaseReady();
+    const db = getDb();
+    if (!db) return;
 
-  await db.execute(
-    sql`insert into site_settings (id, company_name, logo_data_url, updated_at) values (${SETTINGS_ROW_ID}, ${settings.companyName}, ${settings.logoDataUrl}, now()) on duplicate key update company_name = values(company_name), logo_data_url = values(logo_data_url), updated_at = now()`,
-  );
+    await db.execute(
+      sql`insert into site_settings (id, company_name, logo_data_url, updated_at) values (${SETTINGS_ROW_ID}, ${settings.companyName}, ${settings.logoDataUrl}, now()) on duplicate key update company_name = values(company_name), logo_data_url = values(logo_data_url), updated_at = now()`,
+    );
+  } catch {
+    /* If the table doesn't exist yet, fall back silently */
+  }
 }
 
 /* ── Public API ── */
