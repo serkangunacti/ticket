@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Building2 } from "lucide-react";
 
+import { HeaderBrand } from "@/components/header-brand";
 import { requireAdminSession } from "@/lib/auth";
 import { getRoleLabel } from "@/lib/labels";
+import { getSiteSettings } from "@/lib/site-settings";
 
-import { logoutAction } from "./actions";
+import { logoutAction, updateSiteSettingsAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -12,19 +13,20 @@ export default async function AdminLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await requireAdminSession();
+  const settings = await getSiteSettings();
 
   return (
     <div className="min-h-screen text-[#102038]">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[linear-gradient(135deg,#071526_0%,#0f2745_58%,#163b66_100%)] text-white shadow-[0_18px_40px_rgba(7,21,38,0.2)] backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-[1480px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-[#8de7ff]">
-              <Building2 className="h-5 w-5" />
-            </div>
+            <HeaderBrand
+              companyName={settings.companyName}
+              logoDataUrl={settings.logoDataUrl}
+              canEdit={session.role === "owner"}
+              updateAction={updateSiteSettingsAction}
+            />
             <div>
-              <Link href="/ticket/admin" className="text-2xl font-semibold tracking-tight text-white">
-                Uptexx Ticket
-              </Link>
               <p className="mt-1 text-sm text-[#c1d5eb]">
                 {session.email} · {getRoleLabel(session.role)}
               </p>

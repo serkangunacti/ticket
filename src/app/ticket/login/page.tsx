@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AlertCircle, Shield, ArrowRight } from "lucide-react";
 
+import { PasswordInput } from "@/components/password-input";
 import { hasAdminCredentials } from "@/lib/env";
 
 import { loginAction } from "./actions";
@@ -72,9 +73,8 @@ export default async function LoginPage(props: {
               <label className="mb-1.5 block text-xs font-medium tracking-wide text-[#7a93b0]">
                 Şifre
               </label>
-              <input
+              <PasswordInput
                 name="password"
-                type="password"
                 placeholder="••••••••"
                 required
                 className="h-11 w-full rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder-[#4a6180] outline-none transition focus:border-[#37c2e8]/40 focus:ring-1 focus:ring-[#37c2e8]/20"

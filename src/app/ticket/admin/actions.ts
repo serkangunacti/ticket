@@ -25,6 +25,7 @@ import {
   updateTenant,
   updateTicket,
 } from "@/lib/data";
+import { updateSiteSettings } from "@/lib/site-settings";
 
 function getAppBaseUrl(headerMap: Headers) {
   const origin = headerMap.get("origin");
@@ -38,6 +39,19 @@ function getAppBaseUrl(headerMap: Headers) {
 export async function logoutAction() {
   await clearAdminSession();
   redirect("/ticket");
+}
+
+export async function updateSiteSettingsAction(formData: FormData) {
+  await requireMinimumRole(["owner"]);
+  const companyName = String(formData.get("companyName") ?? "").trim();
+  const logoDataUrl = formData.get("logoDataUrl") as string | null;
+
+  await updateSiteSettings({
+    ...(companyName ? { companyName } : {}),
+    ...(logoDataUrl !== null ? { logoDataUrl: logoDataUrl || null } : {}),
+  });
+
+  revalidatePath("/ticket/admin", "layout");
 }
 
 export async function createTenantAction(formData: FormData) {
@@ -335,6 +349,16 @@ export async function createManualTicketAction(formData: FormData) {
     redirect("/ticket/admin?error=manual_ticket");
   }
 
+  const screenshot = formData.get("screenshot") as File | null;
+  let attachment: { fileName: string; mimeType: string; sizeBytes: number } | null = null;
+  if (screenshot && screenshot.size > 0) {
+    attachment = {
+      fileName: screenshot.name,
+      mimeType: screenshot.type,
+      sizeBytes: screenshot.size,
+    };
+  }
+
   await createManualTicket({
     tenantId,
     customerName,
@@ -344,6 +368,7 @@ export async function createManualTicketAction(formData: FormData) {
     description,
     priority,
     createdByEmail: session.email,
+    attachment,
   });
 
   revalidatePath("/ticket/admin");

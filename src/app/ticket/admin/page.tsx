@@ -4,6 +4,7 @@ import {
   Clock3,
   Download,
   Filter,
+  ImagePlus,
   MailOpen,
   PenLine,
 } from "lucide-react";
@@ -289,50 +290,64 @@ export default async function AdminDashboard(props: {
       {/* ── Manual ticket creation (owner/manager only) ── */}
       {canCreateTicket ? (
         <Surface className={panelClass}>
-          <div className="flex items-center gap-2.5 mb-4">
-            <PenLine className="h-4 w-4 text-[#133961]" />
-            <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
-              Manuel ticket oluştur
-            </h2>
-          </div>
-          <p className="mb-4 text-xs text-[#607287]">
-            Tüm müşteri alanları zorunludur. Oluşturan kişi otomatik kaydedilir.
-          </p>
-          {manualTicketError ? (
-            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-900">
-              Ticket oluşturulamadı. Tüm alanları doldurun.
-            </div>
-          ) : null}
-          <form action={createManualTicketAction} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <select name="tenantId" required>
-              <option value="">Tenant seçin</option>
-              {tenants.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-            <input name="customerName" placeholder="Müşteri adı soyadı" required />
-            <input name="customerEmail" type="email" placeholder="Müşteri e-posta" required />
-            <input name="customerPhone" placeholder="Müşteri telefon" required />
-            <input name="subject" placeholder="Konu" required className="sm:col-span-2 lg:col-span-2" />
-            <select name="priority" defaultValue="normal">
-              <option value="low">Düşük</option>
-              <option value="normal">Normal</option>
-              <option value="high">Yüksek</option>
-              <option value="critical">Kritik</option>
-            </select>
-            <textarea
-              name="description"
-              rows={3}
-              placeholder="Detaylı açıklama"
-              required
-              className="resize-none sm:col-span-2 lg:col-span-3"
-            />
-            <div className="sm:col-span-2 lg:col-span-3">
-              <SubmitButton pendingText="Oluşturuluyor..." className={`w-full ${primaryButtonClass}`}>
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center gap-2.5 marker:content-none [&::-webkit-details-marker]:hidden">
+              <PenLine className="h-4 w-4 text-[#133961]" />
+              <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
                 Ticket oluştur
-              </SubmitButton>
+              </h2>
+            </summary>
+            <div className="mt-4">
+              <p className="mb-4 text-xs text-[#607287]">
+                Tüm müşteri alanları zorunludur. Oluşturan kişi otomatik kaydedilir.
+              </p>
+              {manualTicketError ? (
+                <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-900">
+                  Ticket oluşturulamadı. Tüm alanları doldurun.
+                </div>
+              ) : null}
+              <form action={createManualTicketAction} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <select name="tenantId" required>
+                  <option value="">Tenant seçin</option>
+                  {tenants.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                <input name="customerName" placeholder="Müşteri adı soyadı" required />
+                <input name="customerEmail" type="email" placeholder="Müşteri e-posta" required />
+                <input name="customerPhone" placeholder="Müşteri telefon" required />
+                <input name="subject" placeholder="Konu" required className="sm:col-span-2 lg:col-span-2" />
+                <select name="priority" defaultValue="normal">
+                  <option value="low">Düşük</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">Yüksek</option>
+                  <option value="critical">Kritik</option>
+                </select>
+                <textarea
+                  name="description"
+                  rows={3}
+                  placeholder="Detaylı açıklama"
+                  required
+                  className="resize-none sm:col-span-2 lg:col-span-3"
+                />
+                <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-3">
+                  <ImagePlus className="h-4 w-4 shrink-0 text-[#607287]" />
+                  <label className="text-xs text-[#607287]">Ekran görüntüsü</label>
+                  <input
+                    name="screenshot"
+                    type="file"
+                    accept="image/*"
+                    className="block w-full text-xs text-[#607287] file:mr-2 file:rounded-lg file:border-0 file:bg-[rgba(19,57,97,0.08)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#102038] hover:file:bg-[rgba(19,57,97,0.14)]"
+                  />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <SubmitButton pendingText="Oluşturuluyor..." className={`w-full ${primaryButtonClass}`}>
+                    Ticket oluştur
+                  </SubmitButton>
+                </div>
+              </form>
             </div>
-          </form>
+          </details>
         </Surface>
       ) : null}
 

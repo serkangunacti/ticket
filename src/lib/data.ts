@@ -1026,6 +1026,7 @@ export async function createManualTicket(input: {
   description: string;
   priority: "low" | "normal" | "high" | "critical";
   createdByEmail: string;
+  attachment?: { fileName: string; mimeType: string; sizeBytes: number } | null;
 }) {
   const sequenceNo = await getNextSequenceNo();
   const ticketId = randomUUID();
@@ -1086,7 +1087,17 @@ export async function createManualTicket(input: {
           bodyHtml: null,
           sentAt: createdAt,
           createdAt,
-          attachments: [],
+          attachments: input.attachment
+            ? [
+                {
+                  id: randomUUID(),
+                  fileName: input.attachment.fileName,
+                  mimeType: input.attachment.mimeType,
+                  sizeBytes: input.attachment.sizeBytes,
+                  storagePath: `manual/${ticketId}/${input.attachment.fileName}`,
+                },
+              ]
+            : [],
         },
       ],
     };
@@ -1158,8 +1169,9 @@ export async function createManualTicket(input: {
     updatedAt: createdAt,
   });
 
+  const messageId = randomUUID();
   await db.insert(ticketMessages).values({
-    id: randomUUID(),
+    id: messageId,
     ticketId,
     authorType: "admin",
     direction: "internal",
@@ -1169,6 +1181,18 @@ export async function createManualTicket(input: {
     sentAt: createdAt,
     createdAt,
   });
+
+  if (input.attachment) {
+    await db.insert(attachments).values({
+      id: randomUUID(),
+      messageId,
+      fileName: input.attachment.fileName,
+      mimeType: input.attachment.mimeType,
+      sizeBytes: input.attachment.sizeBytes,
+      storagePath: `manual/${ticketId}/${input.attachment.fileName}`,
+      createdAt,
+    });
+  }
 
   await recordAudit({
     action: "manual_ticket_create",

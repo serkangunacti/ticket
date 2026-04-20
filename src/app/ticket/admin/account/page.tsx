@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, KeyRound, Plus, Shield, Users } from "lucide-react";
+import { Building2, KeyRound, Plus, Users } from "lucide-react";
 
 import { SubmitButton } from "@/components/submit-button";
 import { requireAdminSession } from "@/lib/auth";
@@ -96,15 +96,15 @@ export default async function AccountPage(props: {
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        {/* ── Password change (everyone) ─────────────── */}
-        <div className={cardClass}>
-          <div className="mb-4 flex items-center gap-2.5">
-            <KeyRound className="h-4 w-4 text-[#37c2e8]" />
-            <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
-              Şifremi değiştir
-            </h2>
-          </div>
+      {/* ── Password change (everyone) ─────────────── */}
+      <details className="rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/40">
+        <summary className="flex cursor-pointer list-none items-center gap-2.5 px-5 py-4 marker:content-none [&::-webkit-details-marker]:hidden">
+          <KeyRound className="h-4 w-4 text-[#37c2e8]" />
+          <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+            Şifremi değiştir
+          </h2>
+        </summary>
+        <div className="border-t border-[rgba(17,35,60,0.08)] px-5 pb-5 pt-4">
           <p className="mb-4 text-xs leading-5 text-[#607287]">
             Şifre değiştirdikten sonra oturumunuz kapatılır ve giriş ekranına yönlendirilirsiniz.
           </p>
@@ -113,7 +113,7 @@ export default async function AccountPage(props: {
               Şifre değişikliği başarısız. Mevcut şifreyi kontrol edin.
             </div>
           ) : null}
-          <form action={changePasswordAction} className="grid gap-3">
+          <form action={changePasswordAction} className="grid gap-3 max-w-lg">
             <input name="currentPassword" type="password" placeholder="Mevcut şifre" required className={inputClass} />
             <input name="nextPassword" type="password" placeholder="Yeni şifre" required className={inputClass} />
             <input name="confirmPassword" type="password" placeholder="Yeni şifre tekrar" required className={inputClass} />
@@ -122,44 +122,7 @@ export default async function AccountPage(props: {
             </SubmitButton>
           </form>
         </div>
-
-        {/* ── Reset another agent's password (owner/manager) ─── */}
-        {canManageTeam ? (
-          <div className={cardClass}>
-            <div className="mb-4 flex items-center gap-2.5">
-              <Shield className="h-4 w-4 text-[#37c2e8]" />
-              <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
-                Üye şifresi sıfırla
-              </h2>
-            </div>
-            <p className="mb-4 text-xs leading-5 text-[#607287]">
-              Seçilen üyenin şifresini sıfırlayın. Bu işlem sizin oturumunuzu etkilemez.
-            </p>
-            {resetError ? (
-              <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-900">
-                Şifre sıfırlama başarısız oldu.
-              </div>
-            ) : null}
-            <form action={resetAgentPasswordAction} className="grid gap-3">
-              <select name="agentId" required className={inputClass}>
-                <option value="">Üye seçin</option>
-                {agents
-                  .filter((a) => a.id !== session.userId)
-                  .map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.name} ({agent.email})
-                    </option>
-                  ))}
-              </select>
-              <input name="newPassword" type="password" placeholder="Yeni şifre" required className={inputClass} />
-              <input name="confirmNewPassword" type="password" placeholder="Yeni şifre tekrar" required className={inputClass} />
-              <SubmitButton pendingText="Sıfırlanıyor..." className={`w-full ${btnPrimary}`}>
-                Şifreyi sıfırla
-              </SubmitButton>
-            </form>
-          </div>
-        ) : null}
-      </div>
+      </details>
 
       {/* ── Team members (owner only) ─────────────── */}
       {canManageTeam ? (
@@ -185,28 +148,49 @@ export default async function AccountPage(props: {
           {/* Agent list */}
           <div className="space-y-2">
             {agents.map((agent) => (
-              <div
-                key={agent.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-[rgba(17,35,60,0.06)] bg-white/60 px-4 py-3"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[#102038]">{agent.name}</p>
-                  <p className="mt-0.5 text-xs text-[#607287]">
-                    {agent.email} · {getRoleLabel(agent.role)} · {getActiveLabel(agent.isActive)}
-                    {agent.invitePending ? " · Davet bekliyor" : ""}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Link href={`/ticket/admin/team/${agent.id}`} className={btnSecondary}>
-                    Düzenle
-                  </Link>
-                  <form action={toggleSupportAgentStateAction}>
-                    <input type="hidden" name="agentId" value={agent.id} />
-                    <input type="hidden" name="isActive" value={agent.isActive ? "false" : "true"} />
-                    <button className={btnSecondary}>
-                      {agent.isActive ? "Pasif" : "Aktif"}
-                    </button>
-                  </form>
+              <div key={agent.id}>
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-[rgba(17,35,60,0.06)] bg-white/60 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#102038]">{agent.name}</p>
+                    <p className="mt-0.5 text-xs text-[#607287]">
+                      {agent.email} · {getRoleLabel(agent.role)} · {getActiveLabel(agent.isActive)}
+                      {agent.invitePending ? " · Davet bekliyor" : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Link href={`/ticket/admin/team/${agent.id}`} className={btnSecondary}>
+                      Düzenle
+                    </Link>
+                    {agent.id !== session.userId ? (
+                      <details className="relative">
+                        <summary className={`cursor-pointer list-none marker:content-none [&::-webkit-details-marker]:hidden ${btnSecondary}`}>
+                          Şifre sıfırla
+                        </summary>
+                        <div className="absolute right-0 top-full z-10 mt-1.5 w-64 rounded-xl border border-[rgba(17,35,60,0.12)] bg-white p-3 shadow-lg">
+                          {resetError ? (
+                            <div className="mb-2 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-[0.65rem] font-medium text-rose-900">
+                              Şifre sıfırlama başarısız.
+                            </div>
+                          ) : null}
+                          <form action={resetAgentPasswordAction} className="grid gap-2">
+                            <input type="hidden" name="agentId" value={agent.id} />
+                            <input name="newPassword" type="password" placeholder="Yeni şifre" required className={`text-xs ${inputClass}`} />
+                            <input name="confirmNewPassword" type="password" placeholder="Tekrar" required className={`text-xs ${inputClass}`} />
+                            <SubmitButton pendingText="..." className={`w-full text-xs ${btnPrimary}`}>
+                              Sıfırla
+                            </SubmitButton>
+                          </form>
+                        </div>
+                      </details>
+                    ) : null}
+                    <form action={toggleSupportAgentStateAction}>
+                      <input type="hidden" name="agentId" value={agent.id} />
+                      <input type="hidden" name="isActive" value={agent.isActive ? "false" : "true"} />
+                      <button className={btnSecondary}>
+                        {agent.isActive ? "Pasif" : "Aktif"}
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             ))}
