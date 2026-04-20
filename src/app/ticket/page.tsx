@@ -37,7 +37,6 @@ const integrationPills = [
   "Shared mailbox sync",
   "Multi-tenant görünürlük",
   "Audit log",
-  "Excel + PDF export",
   "Rol bazlı ekip akışı",
 ];
 
@@ -100,8 +99,12 @@ const commercializationPoints = [
 const packageTiers = [
   {
     name: "Starter",
+    eyebrow: "Başlangıç",
+    audience: "İlk ticket düzenini kuran iç IT ve küçük destek ekipleri",
     capacity: "1 mailbox • 3 yönetici • 5 tenant",
-    summary: "İlk müşteri operasyonunu ürünleştirmek isteyen ekipler için kompakt başlangıç kurgusu.",
+    summary: "İlk müşteri veya iş birimi akışını kontrollü biçimde başlatmak için odaklı kurulum modeli.",
+    onboarding: "Standart onboarding",
+    reporting: "Aylık export",
     highlight: false,
     features: [
       "Mail-first ticket akışı",
@@ -110,11 +113,16 @@ const packageTiers = [
       "Excel ve PDF export",
       "Kurulum yönlendirmesi",
     ],
+    cta: "Starter planını konuşalım",
   },
   {
     name: "Growth",
+    eyebrow: "Önerilen yapı",
+    audience: "Birden fazla müşteri hesabını aynı merkezden yöneten büyüyen ekipler",
     capacity: "Çoklu mailbox • 12 yönetici • sınırsız tenant görünürlüğü",
-    summary: "Birden fazla müşteriyi tek operasyon merkeziyle yöneten büyüyen destek ekipleri için.",
+    summary: "Ticket hacmi büyürken ekip rollerini, audit görünürlüğünü ve düzenli müşteri raporlarını birlikte yöneten yapı.",
+    onboarding: "Eşlikli canlıya geçiş",
+    reporting: "Gelişmiş görünürlük",
     highlight: true,
     features: [
       "Owner, manager ve agent rol yapısı",
@@ -123,11 +131,16 @@ const packageTiers = [
       "Aylık raporlama ve export akışı",
       "Onboarding ve canlıya geçiş desteği",
     ],
+    cta: "Growth planını planlayalım",
   },
   {
     name: "Scale",
-    capacity: "Yüksek hacim kurgu • özel onboarding • çok ekipli operasyon",
-    summary: "Kurumsal destek, MSP veya iç IT tarafında daha yoğun ticket hacmiyle çalışan yapılar için.",
+    eyebrow: "Kurumsal kurgu",
+    audience: "MSP, çok ekipli operasyon ve yüksek ticket hacmiyle çalışan yapılar",
+    capacity: "Yüksek hacim • özel onboarding • çok ekipli operasyon",
+    summary: "Yüksek ticket hacmi, çoklu ekip ve yaygın müşteri portföyü için daha kontrollü ve fazlı kurulum modeli.",
+    onboarding: "Özel kurulum planı",
+    reporting: "Kurumsal rapor akışı",
     highlight: false,
     features: [
       "Yüksek hacimli tenant ve ekip planlaması",
@@ -136,6 +149,26 @@ const packageTiers = [
       "Operasyon raporlarının süreçlere yerleştirilmesi",
       "Uptexx ile canlıya geçiş workshop'u",
     ],
+    cta: "Scale yapısını konuşalım",
+  },
+];
+
+const packageComparisonRows = [
+  {
+    label: "Mailbox yapısı",
+    values: ["Tek mailbox", "Çoklu mailbox", "Yüksek hacimli çoklu yapı"],
+  },
+  {
+    label: "Ekip kurgusu",
+    values: ["Temel roller", "Rol bazlı operasyon", "Çok ekipli yönetim"],
+  },
+  {
+    label: "Raporlama",
+    values: ["Standart export", "Gelişmiş görünürlük", "Kurumsal sunum akışı"],
+  },
+  {
+    label: "Canlıya geçiş",
+    values: ["Standart kurulum", "Eşlikli onboarding", "Özel proje kurgusu"],
   },
 ];
 
@@ -211,13 +244,13 @@ export default function TicketLandingPage() {
             <div className="flex items-center gap-3">
               <a
                 href="#paketler"
-                className="hidden rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/12 sm:inline-flex"
+                className="hidden rounded-full border border-[#365474] bg-[#11253f]/84 px-4 py-2 text-sm font-medium text-white transition hover:border-[#67d7f5]/38 hover:bg-[#16314e] sm:inline-flex"
               >
                 Paketler
               </a>
               <Link
                 href="/ticket/login"
-                className="inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#08131f] transition hover:-translate-y-0.5"
+                className="inline-flex rounded-full border border-[#67d7f5]/28 bg-[linear-gradient(135deg,#0f263f_0%,#15406b_52%,#205aa8_100%)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(3,10,18,0.25)] transition hover:-translate-y-0.5 hover:border-[#8fe9ff]/42"
               >
                 Yönetim Girişi
               </Link>
@@ -263,7 +296,7 @@ export default function TicketLandingPage() {
                 </a>
                 <a
                   href="https://www.uptexx.com/iletisim"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/16 bg-white px-6 py-3 text-sm font-semibold text-[#08131f] shadow-[0_10px_30px_rgba(0,0,0,0.16)] transition hover:-translate-y-0.5 hover:bg-[#f1f7fb] hover:text-[#08131f]"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#2c4a68] bg-[#10253f]/88 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.16)] transition hover:-translate-y-0.5 hover:border-[#67d7f5]/38 hover:bg-[#15314f]"
                 >
                   İletişime geç <ChevronRight className="h-4 w-4" />
                 </a>
@@ -616,51 +649,129 @@ export default function TicketLandingPage() {
         </div>
       </section>
 
-      <section id="paketler" className="relative overflow-hidden bg-[linear-gradient(180deg,#08121f_0%,#0f2238_100%)] py-24 text-white">
-        <div className="ticket-ambient-grid pointer-events-none absolute inset-0 opacity-40" />
+      <section id="paketler" className="relative overflow-hidden border-y border-[rgba(15,23,42,0.08)] bg-[linear-gradient(180deg,#e8f0f7_0%,#f8fbfd_58%,#edf4f9_100%)] py-24 text-[#11233c]">
+        <div className="soft-grid pointer-events-none absolute inset-0 opacity-45" />
         <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
           <div className="ticket-reveal mx-auto max-w-3xl text-center">
-            <SectionLabel className="border-white/12 bg-white/8 text-[#8fe9ff]">
-              Paketler
+            <SectionLabel className="border-[#cfe0ea] bg-[#f4f9fc] text-[#215774]">
+              Uptexx Destek Paketleri
             </SectionLabel>
-            <h2 className="mt-6 text-3xl font-semibold tracking-tight text-white md:text-[3.35rem] md:leading-[1.02]">
-              İhtiyaca göre ölçeklenen Uptexx Ticket paketleri.
+            <h2 className="mt-6 text-3xl font-semibold tracking-tight text-[#12253f] md:text-[3.35rem] md:leading-[1.02]">
+              İhtiyaca göre ölçeklenen, kurumsal olarak sunulabilir destek paketleri.
             </h2>
-            <p className="mt-5 text-base leading-8 text-[#bed0df] md:text-lg">
-              Paketler mailbox, tenant ve ekip hacmine göre örneklendirilmiştir. Uygun
-              kurulum planı ihtiyaç analizi ile birlikte netleştirilir.
+            <p className="mt-5 text-base leading-8 text-[#5e738b] md:text-lg">
+              Her paket mailbox yapısı, tenant hacmi ve ekip organizasyonuna göre
+              kurgulanmıştır. İhtiyaç büyüdükçe aynı operasyon mantığını bozmadan üst
+              yapıya geçebilirsiniz.
             </p>
           </div>
 
-          <div className="mt-12 grid gap-6 xl:grid-cols-3">
+          <div className="ticket-reveal mt-12 overflow-x-auto rounded-[32px] border border-[rgba(17,35,60,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92)_0%,rgba(241,246,250,0.96)_100%)] shadow-[0_26px_80px_rgba(8,25,47,0.08)]">
+            <div className="min-w-[760px]">
+              <div className="grid grid-cols-[1.1fr_repeat(3,minmax(0,1fr))] gap-px bg-[rgba(17,35,60,0.08)]">
+                <div className="bg-[#f6fbfe] p-5">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[#2a6b87]">
+                    Kapsam karşılaştırması
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-[#607285]">
+                    Paketler arasındaki temel operasyon farklarını hızlıca görün.
+                  </p>
+                </div>
+                {packageTiers.map((tier) => (
+                  <div
+                    key={tier.name}
+                    className={`p-5 ${tier.highlight ? "bg-[linear-gradient(180deg,#102742_0%,#173c64_100%)] text-white" : "bg-white text-[#12253f]"}`}
+                  >
+                    <p className={`text-[0.68rem] font-semibold uppercase tracking-[0.24em] ${tier.highlight ? "text-[#8fe9ff]" : "text-[#2a6b87]"}`}>
+                      {tier.eyebrow}
+                    </p>
+                    <p className="mt-3 text-2xl font-semibold tracking-tight">{tier.name}</p>
+                    <p className={`mt-2 text-sm leading-6 ${tier.highlight ? "text-[#c9d8e5]" : "text-[#607285]"}`}>
+                      {tier.audience}
+                    </p>
+                  </div>
+                ))}
+                {packageComparisonRows.map((row) => (
+                  <div key={row.label} className="contents">
+                    <div key={`${row.label}-label`} className="bg-[#f9fbfd] p-4 text-sm font-semibold text-[#18324f]">
+                      {row.label}
+                    </div>
+                    {row.values.map((value, index) => (
+                      <div
+                        key={`${row.label}-${packageTiers[index]?.name}`}
+                        className={`p-4 text-sm leading-6 ${packageTiers[index]?.highlight ? "bg-[#102742] text-[#d9e7f1]" : "bg-white text-[#5f738c]"}`}
+                      >
+                        {value}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-6 xl:grid-cols-3">
             {packageTiers.map((tier, index) => (
               <article
                 key={tier.name}
-                className={`ticket-reveal relative overflow-hidden rounded-[30px] border p-7 shadow-[0_28px_80px_rgba(4,12,22,0.22)] backdrop-blur-xl ${
+                className={`ticket-reveal relative overflow-hidden rounded-[34px] border p-7 shadow-[0_22px_70px_rgba(8,25,47,0.09)] backdrop-blur-xl ${
                   tier.highlight
-                    ? "border-[#8fe9ff]/36 bg-[linear-gradient(180deg,rgba(121,220,247,0.12)_0%,rgba(14,31,49,0.96)_18%,rgba(10,24,40,0.98)_100%)]"
-                    : "border-white/10 bg-white/[0.05]"
+                    ? "border-[#8fe9ff]/42 bg-[linear-gradient(180deg,#0f263f_0%,#14355a_54%,#0c1f35_100%)] text-white"
+                    : "border-[rgba(17,35,60,0.08)] bg-[rgba(255,255,255,0.94)] text-[#12253f]"
                 }`}
                 style={{ animationDelay: `${120 + index * 90}ms` }}
               >
                 {tier.highlight ? (
-                  <div className="absolute right-5 top-5 rounded-full bg-[#8fe9ff] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#08131f]">
-                    en çok tercih edilen
+                  <div className="absolute right-5 top-5 rounded-full bg-[linear-gradient(135deg,#8fe9ff_0%,#56cce9_100%)] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#08131f] shadow-[0_10px_24px_rgba(86,204,233,0.28)]">
+                    önerilen yapı
                   </div>
                 ) : null}
 
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-[#8fe9ff]">
-                  {tier.name}
+                <p className={`text-[0.7rem] font-semibold uppercase tracking-[0.24em] ${tier.highlight ? "text-[#8fe9ff]" : "text-[#2a6b87]"}`}>
+                  {tier.eyebrow}
                 </p>
-                <p className="mt-5 text-3xl font-semibold tracking-tight text-white">
-                  {tier.capacity}
-                </p>
-                <p className="mt-4 text-sm leading-7 text-[#c7d7e4]">{tier.summary}</p>
+                <div className="mt-4 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[2rem] font-semibold tracking-tight">{tier.name}</p>
+                    <p className={`mt-3 max-w-xs text-sm leading-6 ${tier.highlight ? "text-[#c9d8e5]" : "text-[#607285]"}`}>
+                      {tier.audience}
+                    </p>
+                  </div>
+                  <div className={`rounded-[20px] border px-3 py-2 text-right ${tier.highlight ? "border-white/12 bg-white/8" : "border-[rgba(17,35,60,0.08)] bg-[#f4f9fc]"}`}>
+                    <p className={`text-[0.65rem] font-semibold uppercase tracking-[0.22em] ${tier.highlight ? "text-[#8fe9ff]" : "text-[#2a6b87]"}`}>
+                      operasyon ölçeği
+                    </p>
+                    <p className="mt-2 text-sm font-semibold leading-6">{tier.capacity}</p>
+                  </div>
+                </div>
 
-                <div className="mt-7 space-y-3 border-t border-white/10 pt-6">
+                <p className={`mt-6 text-sm leading-7 ${tier.highlight ? "text-[#d7e4ef]" : "text-[#607285]"}`}>
+                  {tier.summary}
+                </p>
+
+                <div className={`mt-6 grid gap-3 rounded-[24px] border p-4 ${tier.highlight ? "border-white/10 bg-white/[0.04]" : "border-[rgba(17,35,60,0.08)] bg-[#f7fbfd]"}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className={`text-[0.68rem] font-semibold uppercase tracking-[0.22em] ${tier.highlight ? "text-[#8fe9ff]" : "text-[#2a6b87]"}`}>
+                      canlıya geçiş
+                    </span>
+                    <span className={`text-sm font-medium ${tier.highlight ? "text-white" : "text-[#18324f]"}`}>
+                      {tier.onboarding}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 border-t border-[rgba(255,255,255,0.08)] pt-3">
+                    <span className={`text-[0.68rem] font-semibold uppercase tracking-[0.22em] ${tier.highlight ? "text-[#8fe9ff]" : "text-[#2a6b87]"}`}>
+                      raporlama
+                    </span>
+                    <span className={`text-sm font-medium ${tier.highlight ? "text-white" : "text-[#18324f]"}`}>
+                      {tier.reporting}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={`mt-7 space-y-3 border-t pt-6 ${tier.highlight ? "border-white/10" : "border-[rgba(17,35,60,0.08)]"}`}>
                   {tier.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-3 text-sm text-[#dbe7f0]">
-                      <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#8fe9ff]" />
+                    <div key={feature} className={`flex items-start gap-3 text-sm ${tier.highlight ? "text-[#dbe7f0]" : "text-[#435970]"}`}>
+                      <CheckCircle2 className={`mt-0.5 h-[18px] w-[18px] shrink-0 ${tier.highlight ? "text-[#8fe9ff]" : "text-[#2a6b87]"}`} />
                       <span className="leading-6">{feature}</span>
                     </div>
                   ))}
@@ -670,11 +781,11 @@ export default function TicketLandingPage() {
                   href="https://www.uptexx.com/iletisim"
                   className={`mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${
                     tier.highlight
-                      ? "bg-[#8fe9ff] text-[#08131f]"
-                      : "border border-white/16 bg-white text-[#08131f] shadow-[0_10px_30px_rgba(0,0,0,0.14)] hover:bg-[#f2f7fb] hover:text-[#08131f]"
+                      ? "bg-[linear-gradient(135deg,#8fe9ff_0%,#56cce9_52%,#2b7fda_100%)] text-[#08131f] shadow-[0_18px_40px_rgba(86,204,233,0.28)]"
+                      : "border border-[#21466b]/14 bg-[linear-gradient(135deg,#10253f_0%,#0b1623_100%)] text-white shadow-[0_14px_34px_rgba(8,25,47,0.12)] hover:border-[#5fdaf5]/30 hover:bg-[linear-gradient(135deg,#14355a_0%,#10253f_100%)]"
                   }`}
                 >
-                  Detayları konuşalım <ArrowRight className="h-4 w-4" />
+                  {tier.cta} <ArrowRight className="h-4 w-4" />
                 </a>
               </article>
             ))}
@@ -749,13 +860,13 @@ export default function TicketLandingPage() {
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                 <a
                   href="https://www.uptexx.com/iletisim"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#08131f] transition hover:-translate-y-0.5"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#8fe9ff_0%,#56cce9_52%,#2b7fda_100%)] px-6 py-3 text-sm font-semibold text-[#08131f] shadow-[0_18px_40px_rgba(86,204,233,0.26)] transition hover:-translate-y-0.5"
                 >
                   İletişime geç <ArrowRight className="h-4 w-4" />
                 </a>
                 <Link
                   href="/ticket/login"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/16 bg-white px-6 py-3 text-sm font-semibold text-[#08131f] shadow-[0_10px_30px_rgba(0,0,0,0.14)] transition hover:-translate-y-0.5 hover:bg-[#f2f7fb] hover:text-[#08131f]"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#2c4a68] bg-[#10253f]/88 px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.16)] transition hover:-translate-y-0.5 hover:border-[#67d7f5]/38 hover:bg-[#15314f]"
                 >
                   Mevcut müşteriyim <Clock3 className="h-4 w-4" />
                 </Link>
