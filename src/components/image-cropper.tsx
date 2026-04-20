@@ -12,6 +12,7 @@ type Props = {
 
 const VIEW = 260;
 const OUTPUT = 128;
+const BG = "#071526"; // header arka plan rengi — boş alanları doldurur
 
 export function ImageCropper({ src, onCrop, onCancel }: Props) {
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -22,8 +23,9 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
   const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
   const prevZoomRef = useRef(1);
 
-  const baseScale = Math.max(VIEW / nat.w, VIEW / nat.h);
-  const scale = baseScale * zoom;
+  /* FIT: tüm görsel viewport'a sığsın */
+  const fitScale = Math.min(VIEW / Math.max(nat.w, 1), VIEW / Math.max(nat.h, 1));
+  const scale = fitScale * zoom;
   const imgW = nat.w * scale;
   const imgH = nat.h * scale;
 
@@ -33,10 +35,10 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
     img.onload = () => {
       imgRef.current = img;
       setNat({ w: img.naturalWidth, h: img.naturalHeight });
-      const bs = Math.max(VIEW / img.naturalWidth, VIEW / img.naturalHeight);
+      const fs = Math.min(VIEW / img.naturalWidth, VIEW / img.naturalHeight);
       setOff({
-        x: (VIEW - img.naturalWidth * bs) / 2,
-        y: (VIEW - img.naturalHeight * bs) / 2,
+        x: (VIEW - img.naturalWidth * fs) / 2,
+        y: (VIEW - img.naturalHeight * fs) / 2,
       });
       setZoom(1);
       prevZoomRef.current = 1;
@@ -58,22 +60,37 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
     prevZoomRef.current = zoom;
   }, [zoom]);
 
-  /* Generate live preview whenever offset/zoom changes */
+  /* Canvas render helper (shared by preview & final crop) */
+  const renderCrop = useCallback(
+    (quality: number) => {
+      const img = imgRef.current;
+      if (!img || nat.w <= 1) return null;
+      const canvas = document.createElement("canvas");
+      canvas.width = OUTPUT;
+      canvas.height = OUTPUT;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      /* Fill background so no transparent areas */
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, OUTPUT, OUTPUT);
+      /* Map viewport → source pixels */
+      const s = fitScale * zoom;
+      const ratio = OUTPUT / VIEW;
+      const dx = off.x * ratio;
+      const dy = off.y * ratio;
+      const dw = imgW * ratio;
+      const dh = imgH * ratio;
+      ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, dx, dy, dw, dh);
+      return canvas.toDataURL("image/png", quality);
+    },
+    [off, zoom, nat, fitScale, imgW, imgH],
+  );
+
+  /* Live preview */
   useEffect(() => {
-    const img = imgRef.current;
-    if (!img || nat.w <= 1) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = OUTPUT;
-    canvas.height = OUTPUT;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const s = baseScale * zoom;
-    const srcX = -off.x / s;
-    const srcY = -off.y / s;
-    const srcSize = VIEW / s;
-    ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT, OUTPUT);
-    setPreview(canvas.toDataURL("image/png", 0.8));
-  }, [off, zoom, nat, baseScale]);
+    const url = renderCrop(0.7);
+    if (url) setPreview(url);
+  }, [renderCrop]);
 
   const startDrag = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
@@ -101,24 +118,14 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
     setZoom(1);
     prevZoomRef.current = 1;
     setOff({
-      x: (VIEW - nat.w * baseScale) / 2,
-      y: (VIEW - nat.h * baseScale) / 2,
+      x: (VIEW - nat.w * fitScale) / 2,
+      y: (VIEW - nat.h * fitScale) / 2,
     });
-  }, [nat, baseScale]);
+  }, [nat, fitScale]);
 
   const handleCrop = () => {
-    const img = imgRef.current;
-    if (!img) { if (preview) onCrop(preview); return; }
-    const canvas = document.createElement("canvas");
-    canvas.width = OUTPUT;
-    canvas.height = OUTPUT;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) { if (preview) onCrop(preview); return; }
-    const srcX = -off.x / scale;
-    const srcY = -off.y / scale;
-    const srcSize = VIEW / scale;
-    ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, OUTPUT, OUTPUT);
-    onCrop(canvas.toDataURL("image/png", 0.9));
+    const url = renderCrop(0.9);
+    if (url) onCrop(url);
   };
 
   return createPortal(
@@ -135,7 +142,7 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
           <div>
             <p className="text-sm font-semibold text-white">Logo kırpma</p>
             <p className="mt-0.5 text-[0.7rem] text-white/35">
-              Sürükleyerek konumlandırın, kaydırıcıyla yakınlaştırın
+              Sürükle &amp; yakınlaştır, ardından kırp
             </p>
           </div>
           <button
@@ -148,7 +155,7 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
           </button>
         </div>
 
-        {/* Main crop area + preview side by side */}
+        {/* Main crop area + preview */}
         <div className="flex items-start gap-4">
           {/* Crop viewport */}
           <div
@@ -156,8 +163,7 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
             style={{
               width: VIEW,
               height: VIEW,
-              background:
-                "repeating-conic-gradient(#162d4a 0% 25%, #0c1f38 0% 50%) 50% / 16px 16px",
+              backgroundColor: BG,
             }}
             onMouseDown={startDrag}
             onMouseMove={onMove}
@@ -194,13 +200,13 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
             <span className="text-[0.6rem] font-medium uppercase tracking-wider text-white/30">
               Önizleme
             </span>
-            <div className="h-16 w-16 overflow-hidden rounded-xl border border-white/12 bg-white/5">
+            <div className="h-16 w-16 overflow-hidden rounded-xl border border-white/12 bg-[#071526]">
               {preview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={preview} alt="" className="h-full w-full" />
               ) : null}
             </div>
-            <div className="mt-1 h-8 w-8 overflow-hidden rounded-lg border border-white/10 bg-white/5">
+            <div className="mt-1 h-8 w-8 overflow-hidden rounded-lg border border-white/10 bg-[#071526]">
               {preview ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={preview} alt="" className="h-full w-full" />
@@ -215,7 +221,7 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
           <input
             type="range"
             min="1"
-            max="4"
+            max="5"
             step="0.02"
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
