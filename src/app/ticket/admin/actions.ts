@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -27,6 +27,18 @@ import {
 } from "@/lib/data";
 import { updateSiteSettings } from "@/lib/site-settings";
 
+async function setSlugCookie(companyName: string) {
+  const { slugify } = await import("@/lib/site-settings");
+  const slug = slugify(companyName);
+  const cookieStore = await cookies();
+  cookieStore.set("company_slug", slug, {
+    httpOnly: false,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+}
+
 function getAppBaseUrl(headerMap: Headers) {
   const origin = headerMap.get("origin");
   if (origin) return origin;
@@ -46,11 +58,12 @@ export async function updateSiteSettingsAction(formData: FormData) {
   const companyName = String(formData.get("companyName") ?? "").trim();
   const logoDataUrl = formData.get("logoDataUrl") as string | null;
 
-  await updateSiteSettings({
+  const settings = await updateSiteSettings({
     ...(companyName ? { companyName } : {}),
     ...(logoDataUrl !== null ? { logoDataUrl: logoDataUrl || null } : {}),
   });
 
+  await setSlugCookie(settings.companyName);
   revalidatePath("/ticket/admin", "layout");
 }
 

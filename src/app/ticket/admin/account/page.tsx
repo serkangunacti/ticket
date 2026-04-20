@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Building2, KeyRound, Plus, Users } from "lucide-react";
+import { ArrowLeft, Building2, KeyRound, Plus, Users } from "lucide-react";
 
 import { SubmitButton } from "@/components/submit-button";
 import { requireAdminSession } from "@/lib/auth";
 import { getActiveLabel, getRoleLabel } from "@/lib/labels";
 import { listSupportAgents, listTenants } from "@/lib/data";
+import { getSiteSettings, slugify } from "@/lib/site-settings";
 
 import {
   changePasswordAction,
@@ -52,8 +53,20 @@ export default async function AccountPage(props: {
     canManageTeam ? listSupportAgents() : Promise.resolve([]),
   ]);
 
+  const settings = await getSiteSettings();
+  const basePath = `/ticket/${slugify(settings.companyName)}`;
+
   return (
     <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+      {/* Back navigation */}
+      <Link
+        href={basePath}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#607287] transition hover:text-[#102038]"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Ticket sayfasına dön
+      </Link>
+
       {/* Page header */}
       <div className="flex items-center gap-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d9f6ff_0%,#eef6fb_100%)] text-[#133961]">
@@ -158,7 +171,7 @@ export default async function AccountPage(props: {
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Link href={`/ticket/admin/team/${agent.id}`} className={btnSecondary}>
+                    <Link href={`${basePath}/team/${agent.id}`} className={btnSecondary}>
                       Düzenle
                     </Link>
                     {agent.id !== session.userId ? (
@@ -254,7 +267,7 @@ export default async function AccountPage(props: {
                   </p>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Link href={`/ticket/admin/tenants/${tenant.id}`} className={btnSecondary}>
+                  <Link href={`${basePath}/tenants/${tenant.id}`} className={btnSecondary}>
                     Düzenle
                   </Link>
                   <form action={toggleTenantStateAction}>

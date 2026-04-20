@@ -6,6 +6,7 @@ import { Surface } from "@/components/ticket-ui";
 import { requireMinimumRole } from "@/lib/auth";
 import { getRoleLabel } from "@/lib/labels";
 import { getSupportAgent } from "@/lib/data";
+import { getSiteSettings, slugify } from "@/lib/site-settings";
 
 import { updateSupportAgentAction } from "../../actions";
 
@@ -22,12 +23,15 @@ export default async function TeamMemberDetailPage(props: {
   const updated = searchParams.updated === "1";
   const hasError = searchParams.error === "agent";
 
+  const settings = await getSiteSettings();
+  const basePath = `/ticket/${slugify(settings.companyName)}`;
+
   if (!agent) {
     return (
       <main className="mx-auto w-full max-w-4xl px-6 py-10 lg:px-10">
         <Surface>
           <p className="text-lg font-semibold text-[#2a2e36]">Ekip üyesi bulunamadı.</p>
-          <Link href="/ticket/admin" className="mt-4 inline-flex text-sm font-semibold text-[#7d6546]">
+          <Link href={basePath} className="mt-4 inline-flex text-sm font-semibold text-[#7d6546]">
             Panele dön
           </Link>
         </Surface>
@@ -39,7 +43,7 @@ export default async function TeamMemberDetailPage(props: {
     <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10 lg:px-10">
       <div>
         <Link
-          href="/ticket/admin"
+          href={basePath}
           className="inline-flex items-center gap-2 text-sm font-semibold text-[#7d6546]"
         >
           <ArrowLeft className="h-4 w-4" /> Panele dön

@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { HeaderBrand } from "@/components/header-brand";
 import { requireAdminSession } from "@/lib/auth";
 import { getRoleLabel } from "@/lib/labels";
-import { getSiteSettings } from "@/lib/site-settings";
+import { getSiteSettings, slugify } from "@/lib/site-settings";
 
 import { logoutAction, updateSiteSettingsAction } from "./actions";
 
@@ -14,6 +15,19 @@ export default async function AdminLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await requireAdminSession();
   const settings = await getSiteSettings();
+  const slug = slugify(settings.companyName);
+  const basePath = `/ticket/${slug}`;
+
+  /* Ensure company_slug cookie is always set (e.g. first visit after deploy) */
+  const cookieStore = await cookies();
+  if (cookieStore.get("company_slug")?.value !== slug) {
+    cookieStore.set("company_slug", slug, {
+      httpOnly: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  }
 
   return (
     <div className="min-h-screen text-[#102038]">
@@ -35,7 +49,7 @@ export default async function AdminLayout({
 
           <div className="flex flex-wrap items-center gap-2.5">
             <Link
-              href="/ticket/admin/account"
+              href={`${basePath}/account`}
               className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/14"
             >
               Şirketim

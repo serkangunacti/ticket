@@ -15,6 +15,7 @@ import { requireAdminSession } from "@/lib/auth";
 import { hasDatabase } from "@/lib/env";
 import { calculateMetrics } from "@/lib/reports";
 import { listAuditLogs, listTenants, listTickets } from "@/lib/data";
+import { getSiteSettings, slugify } from "@/lib/site-settings";
 import type { TicketFilters, TicketListItem } from "@/lib/types";
 import { formatDateTime, formatDurationMinutes } from "@/lib/utils";
 
@@ -131,6 +132,15 @@ function getAttentionSignal(ticket: TicketListItem, nowTime: number): AttentionS
     };
   }
 
+  /* Kritik / yüksek öncelikli açık ticket'lar her zaman gösterilsin */
+  if (isHighPriority) {
+    return {
+      reason: ticket.priority === "critical" ? "Kritik öncelik" : "Yüksek öncelik",
+      detail: `${formatDurationMinutes(ageMinutes)} önce açıldı`,
+      score: ticket.priority === "critical" ? 85 : 65,
+    };
+  }
+
   return null;
 }
 
@@ -183,6 +193,9 @@ export default async function AdminDashboard(props: {
   const syncScanned = Number(getSearchParamValue(searchParams, "scanned") ?? 0);
   const manualTicketCreated = getSearchParamValue(searchParams, "manual_ticket") === "created";
   const manualTicketError = getSearchParamValue(searchParams, "error") === "manual_ticket";
+
+  const settings = await getSiteSettings();
+  const basePath = `/ticket/${slugify(settings.companyName)}`;
 
   return (
     <main className="mx-auto flex w-full max-w-[1480px] flex-col gap-5 px-4 pb-10 pt-6 sm:px-6 lg:px-8">
@@ -394,7 +407,7 @@ export default async function AdminDashboard(props: {
                       className="border-t border-[rgba(17,35,60,0.08)] transition hover:bg-[rgba(19,57,97,0.03)]"
                     >
                       <td className="px-4 py-3.5 align-top">
-                        <Link href={`/ticket/admin/tickets/${ticket.id}`} className="group block">
+                        <Link href={`${basePath}/tickets/${ticket.id}`} className="group block">
                           <p className="text-sm font-semibold text-[#102038] transition group-hover:text-[#174d81]">
                             {ticket.ticketCode}
                           </p>
@@ -427,7 +440,7 @@ export default async function AdminDashboard(props: {
                       </td>
                       <td className="px-4 py-3.5 align-top text-right">
                         <Link
-                          href={`/ticket/admin/tickets/${ticket.id}`}
+                          href={`${basePath}/tickets/${ticket.id}`}
                           className="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg border border-[rgba(17,35,60,0.08)] bg-white/84 px-3 text-xs font-semibold text-[#102038] transition hover:bg-white"
                         >
                           Düzenle
@@ -491,7 +504,7 @@ export default async function AdminDashboard(props: {
               attentionItems.map((item) => (
                 <Link
                   key={item.ticketId}
-                  href={`/ticket/admin/tickets/${item.ticketId}`}
+                  href={`${basePath}/tickets/${item.ticketId}`}
                   className="block rounded-xl border border-[rgba(17,35,60,0.08)] bg-white/70 px-3.5 py-3 transition hover:border-[rgba(55,194,232,0.2)] hover:shadow-sm"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
@@ -520,19 +533,20 @@ export default async function AdminDashboard(props: {
         </Surface>
 
         <Surface className={panelClass}>
-          <div className="flex items-start gap-2.5 mb-4">
-            <Clock3 className="mt-0.5 h-4 w-4 text-[#37c2e8]" />
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
-                Son işlemler
-              </h2>
-              <p className="mt-0.5 text-xs text-[#607287]">
-                Kronolojik hareket kayıtları.
-              </p>
-            </div>
-          </div>
+          <details>
+            <summary className="flex cursor-pointer list-none items-center gap-2.5 [&::-webkit-details-marker]:hidden">
+              <Clock3 className="mt-0.5 h-4 w-4 text-[#37c2e8]" />
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight text-[#102038]">
+                  Son işlemler
+                </h2>
+                <p className="mt-0.5 text-xs text-[#607287]">
+                  Kronolojik hareket kayıtları.
+                </p>
+              </div>
+            </summary>
 
-          <div className="space-y-2">
+            <div className="mt-4 space-y-2">
             {auditLogs.length ? (
               auditLogs.map((entry) => (
                 <div
@@ -553,7 +567,8 @@ export default async function AdminDashboard(props: {
                 Henüz kaydedilmiş işlem yok.
               </div>
             )}
-          </div>
+            </div>
+          </details>
         </Surface>
       </section>
     </main>

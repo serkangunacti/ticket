@@ -31,6 +31,10 @@ export type MockStore = {
   customers: CustomerRecord[];
   tickets: TicketDetail[];
   auditLogs: AuditEntry[];
+  siteSettings?: {
+    companyName: string;
+    logoDataUrl: string | null;
+  };
 };
 
 const DEFAULT_STORE_DIR = process.env.MOCK_STORE_DIR ?? path.join(os.tmpdir(), "uptexx-mock-store");
@@ -87,6 +91,7 @@ function reviveStore(payload: MockStore): MockStore {
       ...entry,
       createdAt: new Date(entry.createdAt),
     })),
+    siteSettings: payload.siteSettings ?? undefined,
   };
 }
 

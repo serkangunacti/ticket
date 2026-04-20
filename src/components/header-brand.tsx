@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { Building2, Pencil, Check, X, Upload } from "lucide-react";
 
+import { ImageCropper } from "./image-cropper";
+
 type HeaderBrandProps = {
   companyName: string;
   logoDataUrl: string | null;
@@ -20,6 +22,7 @@ export function HeaderBrand({
   const [name, setName] = useState(companyName);
   const [logoPreview, setLogoPreview] = useState<string | null>(logoDataUrl);
   const [saving, setSaving] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (!editing) {
@@ -56,12 +59,12 @@ export function HeaderBrand({
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 512_000) {
-      alert("Logo dosyası 500 KB'den küçük olmalıdır.");
+    if (file.size > 2_000_000) {
+      alert("Logo dosyası 2 MB'den küçük olmalıdır.");
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => setLogoPreview(reader.result as string);
+    reader.onload = () => setCropSrc(reader.result as string);
     reader.readAsDataURL(file);
   };
 
@@ -75,6 +78,7 @@ export function HeaderBrand({
       }
       await updateAction(fd);
       setEditing(false);
+      window.location.reload();
     } finally {
       setSaving(false);
     }
@@ -131,6 +135,17 @@ export function HeaderBrand({
       >
         <X className="h-3.5 w-3.5" />
       </button>
+
+      {cropSrc ? (
+        <ImageCropper
+          src={cropSrc}
+          onCrop={(dataUrl) => {
+            setLogoPreview(dataUrl);
+            setCropSrc(null);
+          }}
+          onCancel={() => setCropSrc(null)}
+        />
+      ) : null}
     </div>
   );
 }

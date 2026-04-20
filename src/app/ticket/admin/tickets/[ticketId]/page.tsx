@@ -6,6 +6,7 @@ import { PriorityBadge, SectionLabel, StatusBadge, Surface } from "@/components/
 import { listSupportAgents, getTicketDetail } from "@/lib/data";
 import { getActiveLabel } from "@/lib/labels";
 import { formatDateTime } from "@/lib/utils";
+import { getSiteSettings, slugify } from "@/lib/site-settings";
 
 import { addTicketMessageAction, updateTicketAction } from "../../actions";
 
@@ -25,12 +26,15 @@ export default async function TicketDetailPage(props: {
   const messageSent = searchParams.message === "sent";
   const messageError = searchParams.error === "message";
 
+  const settings = await getSiteSettings();
+  const basePath = `/ticket/${slugify(settings.companyName)}`;
+
   if (!ticket) {
     return (
       <main className="mx-auto w-full max-w-4xl px-6 py-12 lg:px-10">
         <Surface className="border-[rgba(42,46,54,0.08)] bg-[#fbf7f1] shadow-[0_18px_60px_rgba(69,53,32,0.06)]">
           <p className="text-lg font-semibold text-[#2a2e36]">Ticket bulunamadı.</p>
-          <Link href="/ticket/admin" className="mt-4 inline-flex text-sm font-semibold text-[#7d6546]">
+          <Link href={basePath} className="mt-4 inline-flex text-sm font-semibold text-[#7d6546]">
             Listeye dön
           </Link>
         </Surface>
@@ -43,7 +47,7 @@ export default async function TicketDetailPage(props: {
       <div className="flex items-center justify-between gap-4">
         <div>
           <Link
-            href="/ticket/admin"
+            href={basePath}
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#7d6546]"
           >
             <ArrowLeft className="h-4 w-4" /> Ticket listesine dön
