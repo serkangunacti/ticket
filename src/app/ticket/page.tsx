@@ -696,22 +696,6 @@ export default function TicketLandingPage() {
 
                 <p className="mt-4 text-sm leading-7 text-[#607285]">{tier.summary}</p>
 
-                <div className="mt-6 rounded-[22px] border border-[#e1eaf0] bg-[#f8fbfc] p-5">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
-                    Pakete dahil ürünler
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2.5">
-                    {tier.includedProducts.map((item) => (
-                      <span
-                        key={item}
-                        className="rounded-full border border-[#d8e3ea] bg-white px-3 py-2 text-sm font-medium text-[#16202a]"
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
                 <dl className="mt-6 space-y-4 border-t border-[#e6eef3] pt-6">
                   <div>
                     <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
@@ -735,10 +719,10 @@ export default function TicketLandingPage() {
 
                 <div className="mt-6 flex-1 border-t border-[#e6eef3] pt-6">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
-                    Öne çıkan yetkinlikler
+                    Pakete dahil ürünler
                   </p>
                   <div className="mt-4 space-y-3">
-                    {tier.features.map((feature) => (
+                    {[...tier.includedProducts, ...tier.features].map((feature) => (
                       <div key={feature} className="flex items-start gap-3 text-sm text-[#425466]">
                         <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#256985]" />
                         <span className="leading-6">{feature}</span>
