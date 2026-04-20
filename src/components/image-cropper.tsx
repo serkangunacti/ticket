@@ -1,8 +1,12 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { startTransition, useDeferredValue, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import Cropper from "react-easy-crop";
+import type { Area, Point } from "react-easy-crop";
 import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+
+import { getCroppedSquareDataUrl } from "@/lib/image-utils";
 
 type Props = {
   src: string;
@@ -10,123 +14,80 @@ type Props = {
   onCancel: () => void;
 };
 
-const VIEW = 260;
+const VIEW = 272;
 const OUTPUT = 128;
-const BG = "#071526"; // header arka plan rengi — boş alanları doldurur
+const BG = "#071526";
 
 export function ImageCropper({ src, onCrop, onCancel }: Props) {
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  const [nat, setNat] = useState({ w: 1, h: 1 });
+  const [isMounted, setIsMounted] = useState(false);
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [off, setOff] = useState({ x: 0, y: 0 });
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const dragRef = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
-  const prevZoomRef = useRef(1);
+  const deferredArea = useDeferredValue(croppedAreaPixels);
 
-  /* FIT: tüm görsel viewport'a sığsın */
-  const fitScale = Math.min(VIEW / Math.max(nat.w, 1), VIEW / Math.max(nat.h, 1));
-  const scale = fitScale * zoom;
-  const imgW = nat.w * scale;
-  const imgH = nat.h * scale;
-
-  /* Load image & center */
   useEffect(() => {
-    const img = new Image();
-    img.onload = () => {
-      imgRef.current = img;
-      setNat({ w: img.naturalWidth, h: img.naturalHeight });
-      const fs = Math.min(VIEW / img.naturalWidth, VIEW / img.naturalHeight);
-      setOff({
-        x: (VIEW - img.naturalWidth * fs) / 2,
-        y: (VIEW - img.naturalHeight * fs) / 2,
-      });
-      setZoom(1);
-      prevZoomRef.current = 1;
-    };
-    img.src = src;
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setCroppedAreaPixels(null);
+    setPreview(null);
   }, [src]);
 
-  /* Keep viewport center stable on zoom */
   useEffect(() => {
-    const oldZ = prevZoomRef.current;
-    if (oldZ === zoom) return;
-    const ratio = zoom / oldZ;
-    const cx = VIEW / 2;
-    const cy = VIEW / 2;
-    setOff((prev) => ({
-      x: cx - (cx - prev.x) * ratio,
-      y: cy - (cy - prev.y) * ratio,
-    }));
-    prevZoomRef.current = zoom;
-  }, [zoom]);
+    let cancelled = false;
 
-  /* Canvas render helper (shared by preview & final crop) */
-  const renderCrop = useCallback(
-    (quality: number) => {
-      const img = imgRef.current;
-      if (!img || nat.w <= 1) return null;
-      const canvas = document.createElement("canvas");
-      canvas.width = OUTPUT;
-      canvas.height = OUTPUT;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return null;
-      /* Fill background so no transparent areas */
-      ctx.fillStyle = BG;
-      ctx.fillRect(0, 0, OUTPUT, OUTPUT);
-      /* Map viewport → source pixels */
-      const s = fitScale * zoom;
-      const ratio = OUTPUT / VIEW;
-      const dx = off.x * ratio;
-      const dy = off.y * ratio;
-      const dw = imgW * ratio;
-      const dh = imgH * ratio;
-      ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, dx, dy, dw, dh);
-      return canvas.toDataURL("image/png", quality);
-    },
-    [off, zoom, nat, fitScale, imgW, imgH],
-  );
+    if (!deferredArea) {
+      return undefined;
+    }
 
-  /* Live preview */
-  useEffect(() => {
-    const url = renderCrop(0.7);
-    if (url) setPreview(url);
-  }, [renderCrop]);
+    void (async () => {
+      const nextPreview = await getCroppedSquareDataUrl(
+        src,
+        deferredArea,
+        OUTPUT,
+        BG,
+      );
 
-  const startDrag = useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
-      e.preventDefault();
-      const p = "touches" in e ? e.touches[0] : e;
-      dragRef.current = { sx: p.clientX, sy: p.clientY, ox: off.x, oy: off.y };
-    },
-    [off],
-  );
+      if (cancelled) {
+        return;
+      }
 
-  const onMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (!dragRef.current) return;
-    const p = "touches" in e ? e.touches[0] : e;
-    setOff({
-      x: dragRef.current.ox + p.clientX - dragRef.current.sx,
-      y: dragRef.current.oy + p.clientY - dragRef.current.sy,
-    });
-  }, []);
+      startTransition(() => {
+        setPreview(nextPreview);
+      });
+    })();
 
-  const endDrag = useCallback(() => {
-    dragRef.current = null;
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [deferredArea, src]);
 
-  const handleReset = useCallback(() => {
+  const handleReset = () => {
+    setCrop({ x: 0, y: 0 });
     setZoom(1);
-    prevZoomRef.current = 1;
-    setOff({
-      x: (VIEW - nat.w * fitScale) / 2,
-      y: (VIEW - nat.h * fitScale) / 2,
-    });
-  }, [nat, fitScale]);
-
-  const handleCrop = () => {
-    const url = renderCrop(0.9);
-    if (url) onCrop(url);
   };
+
+  const handleCrop = async () => {
+    if (!croppedAreaPixels) {
+      return;
+    }
+
+    const dataUrl = await getCroppedSquareDataUrl(
+      src,
+      croppedAreaPixels,
+      OUTPUT,
+      BG,
+    );
+    onCrop(dataUrl);
+  };
+
+  if (!isMounted) {
+    return null;
+  }
 
   return createPortal(
     <div
@@ -134,15 +95,14 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
       onClick={onCancel}
     >
       <div
-        className="w-[380px] rounded-2xl border border-white/10 bg-[#0c1f38] p-6 shadow-[0_32px_80px_rgba(0,0,0,0.5)]"
+        className="w-[408px] rounded-[28px] border border-white/10 bg-[#0c1f38] p-6 shadow-[0_32px_80px_rgba(0,0,0,0.5)]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold text-white">Logo kırpma</p>
             <p className="mt-0.5 text-[0.7rem] text-white/35">
-              Sürükle &amp; yakınlaştır, ardından kırp
+              Sürükleyip yerleştirin, yakınlaştırıp portal görünümünü kontrol edin
             </p>
           </div>
           <button
@@ -155,85 +115,90 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
           </button>
         </div>
 
-        {/* Main crop area + preview */}
         <div className="flex items-start gap-4">
-          {/* Crop viewport */}
           <div
-            className="relative shrink-0 cursor-move overflow-hidden rounded-xl border border-white/12"
-            style={{
-              width: VIEW,
-              height: VIEW,
-              backgroundColor: BG,
-            }}
-            onMouseDown={startDrag}
-            onMouseMove={onMove}
-            onMouseUp={endDrag}
-            onMouseLeave={endDrag}
-            onTouchStart={startDrag}
-            onTouchMove={onMove}
-            onTouchEnd={endDrag}
+            className="cropper-stage relative shrink-0 overflow-hidden rounded-[24px] border border-white/12 bg-[#071526] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]"
+            style={{ width: VIEW, height: VIEW }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt=""
-              draggable={false}
-              className="pointer-events-none absolute left-0 top-0 select-none"
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(55,194,232,0.12),transparent_55%)]" />
+            <Cropper
+              image={src}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              minZoom={1}
+              maxZoom={4}
+              objectFit="contain"
+              showGrid={false}
+              restrictPosition
+              disableAutomaticStylesInjection
+              cropShape="rect"
+              cropSize={{ width: VIEW, height: VIEW }}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={(_, nextPixels) => {
+                setCroppedAreaPixels(nextPixels);
+              }}
               style={{
-                width: imgW,
-                height: imgH,
-                transform: `translate(${off.x}px, ${off.y}px)`,
-                willChange: "transform",
+                containerStyle: {
+                  backgroundColor: "transparent",
+                },
+                mediaStyle: {
+                  filter: "drop-shadow(0 18px 36px rgba(0,0,0,0.45))",
+                },
+                cropAreaStyle: {
+                  border: "none",
+                  boxShadow: "none",
+                },
               }}
             />
-            {/* Crop frame */}
-            <div className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-inset ring-white/20" />
-            {/* Corner marks */}
-            <div className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l-2 border-t-2 border-white/40 rounded-tl" />
-            <div className="pointer-events-none absolute right-2 top-2 h-4 w-4 border-r-2 border-t-2 border-white/40 rounded-tr" />
-            <div className="pointer-events-none absolute bottom-2 left-2 h-4 w-4 border-b-2 border-l-2 border-white/40 rounded-bl" />
-            <div className="pointer-events-none absolute bottom-2 right-2 h-4 w-4 border-b-2 border-r-2 border-white/40 rounded-br" />
+            <div className="pointer-events-none absolute inset-0 rounded-[24px] ring-1 ring-inset ring-white/18" />
+            <div className="pointer-events-none absolute inset-[14px] rounded-[18px] border border-white/10" />
+            <div className="pointer-events-none absolute left-3 top-3 h-5 w-5 rounded-tl border-l-2 border-t-2 border-white/40" />
+            <div className="pointer-events-none absolute right-3 top-3 h-5 w-5 rounded-tr border-r-2 border-t-2 border-white/40" />
+            <div className="pointer-events-none absolute bottom-3 left-3 h-5 w-5 rounded-bl border-b-2 border-l-2 border-white/40" />
+            <div className="pointer-events-none absolute bottom-3 right-3 h-5 w-5 rounded-br border-b-2 border-r-2 border-white/40" />
           </div>
 
-          {/* Live preview */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex min-w-[88px] flex-col items-center gap-2">
             <span className="text-[0.6rem] font-medium uppercase tracking-wider text-white/30">
-              Önizleme
+              Portal
             </span>
-            <div className="h-16 w-16 overflow-hidden rounded-xl border border-white/12 bg-[#071526]">
+            <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl border border-white/12 bg-[#071526] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
               {preview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview} alt="" className="h-full w-full" />
+                <img src={preview} alt="" className="h-full w-full object-contain" />
               ) : null}
             </div>
-            <div className="mt-1 h-8 w-8 overflow-hidden rounded-lg border border-white/10 bg-[#071526]">
+            <div className="mt-1 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#071526]">
               {preview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={preview} alt="" className="h-full w-full" />
+                <img src={preview} alt="" className="h-full w-full object-contain" />
               ) : null}
             </div>
+            <p className="px-1 text-center text-[0.62rem] leading-4 text-white/28">
+              Header kutusunda böyle görünecek
+            </p>
           </div>
         </div>
 
-        {/* Zoom slider */}
-        <div className="mt-4 flex items-center gap-3">
-          <ZoomOut className="h-3.5 w-3.5 shrink-0 text-white/30" />
-          <input
-            type="range"
-            min="1"
-            max="5"
-            step="0.02"
-            value={zoom}
-            onChange={(e) => setZoom(Number(e.target.value))}
-            className="flex-1 accent-[#37c2e8]"
-          />
-          <ZoomIn className="h-3.5 w-3.5 shrink-0 text-white/30" />
-          <span className="w-10 text-right text-[0.65rem] tabular-nums text-white/30">
-            {Math.round(zoom * 100)}%
-          </span>
+        <div className="mt-5 rounded-2xl border border-[#1e466c] bg-[#0f2845] px-4 py-3">
+          <div className="flex items-center gap-3">
+            <ZoomOut className="h-3.5 w-3.5 shrink-0 text-white/30" />
+            <input
+              type="range"
+              min="1"
+              max="4"
+              step="0.01"
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="flex-1 accent-[#37c2e8]"
+            />
+            <ZoomIn className="h-3.5 w-3.5 shrink-0 text-white/30" />
+            <span className="w-10 text-right text-[0.65rem] tabular-nums text-white/30">
+              {Math.round(zoom * 100)}%
+            </span>
+          </div>
         </div>
 
-        {/* Actions */}
         <div className="mt-5 flex justify-end gap-2">
           <button
             onClick={onCancel}
@@ -248,6 +213,41 @@ export function ImageCropper({ src, onCrop, onCancel }: Props) {
             Kırp ve uygula
           </button>
         </div>
+
+        <style jsx global>{`
+          .cropper-stage .reactEasyCrop_Container {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .cropper-stage .reactEasyCrop_Container:active {
+            cursor: grabbing;
+          }
+
+          .cropper-stage .reactEasyCrop_Image,
+          .cropper-stage .reactEasyCrop_Video {
+            will-change: transform;
+          }
+
+          .cropper-stage .reactEasyCrop_Contain {
+            max-width: 100%;
+            max-height: 100%;
+            margin: auto;
+            position: absolute;
+            inset: 0;
+          }
+
+          .cropper-stage .reactEasyCrop_CropArea {
+            display: none;
+          }
+        `}</style>
       </div>
     </div>,
     document.body,

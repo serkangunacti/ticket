@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { Building2, Pencil, Check, X, Upload } from "lucide-react";
 
+import { trimImageDataUrl } from "@/lib/image-utils";
+
 import { ImageCropper } from "./image-cropper";
 
 type HeaderBrandProps = {
@@ -33,7 +35,7 @@ export function HeaderBrand({
             <img
               src={logoDataUrl}
               alt=""
-              className="h-full w-full object-cover"
+              className="h-full w-full bg-[#071526] object-contain p-1"
             />
           ) : (
             <Building2 className="h-5 w-5 text-[#8de7ff]" />
@@ -64,7 +66,11 @@ export function HeaderBrand({
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => setCropSrc(reader.result as string);
+    reader.onload = async () => {
+      const rawDataUrl = reader.result as string;
+      const trimmedDataUrl = await trimImageDataUrl(rawDataUrl);
+      setCropSrc(trimmedDataUrl);
+    };
     reader.readAsDataURL(file);
   };
 
@@ -108,7 +114,7 @@ export function HeaderBrand({
           <img
             src={logoPreview}
             alt=""
-            className="h-full w-full object-cover"
+            className="h-full w-full bg-[#071526] object-contain p-1"
           />
         ) : (
           <Upload className="h-4 w-4 text-[#8de7ff]" />
