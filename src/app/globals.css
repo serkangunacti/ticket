@@ -40,6 +40,7 @@ body:has(main[data-ticket-landing]) {
     radial-gradient(circle at top, rgba(85, 211, 244, 0.14), transparent 26%),
     linear-gradient(180deg, #0a1725 0%, #0c1c2c 32%, #102338 68%, #0c1928 100%);
   color: #ffffff;
+  overflow-x: clip;
 }
 
 a {
