@@ -101,9 +101,13 @@ const packageTiers = [
     name: "Starter",
     eyebrow: "Başlangıç",
     audience: "İlk ticket düzenini kuran iç IT ve küçük destek ekipleri",
-    capacity: "1 mailbox • 3 yönetici • 5 tenant",
     summary: "İlk müşteri veya iş birimi akışını kontrollü biçimde başlatmak için odaklı kurulum modeli.",
-    onboarding: "Standart onboarding",
+    includedProducts: [
+      "1 mailbox bağlantısı",
+      "3 yönetici hesabı",
+      "5 tenant alanı",
+    ],
+    onboarding: "Standard onboarding",
     reporting: "Aylık export",
     highlight: false,
     features: [
@@ -113,15 +117,19 @@ const packageTiers = [
       "Excel ve PDF export",
       "Kurulum yönlendirmesi",
     ],
-    cta: "Starter planını konuşalım",
+    cta: "Starter için iletişime geçin",
   },
   {
     name: "Growth",
     eyebrow: "Büyüme",
     audience: "Birden fazla müşteri hesabını aynı merkezden yöneten büyüyen ekipler",
-    capacity: "Çoklu mailbox • 12 yönetici • sınırsız tenant görünürlüğü",
     summary: "Ticket hacmi büyürken ekip rollerini, audit görünürlüğünü ve düzenli müşteri raporlarını birlikte yöneten yapı.",
-    onboarding: "Eşlikli canlıya geçiş",
+    includedProducts: [
+      "Çoklu mailbox desteği",
+      "12 yönetici hesabı",
+      "Sınırsız tenant görünürlüğü",
+    ],
+    onboarding: "Guided onboarding",
     reporting: "Gelişmiş görünürlük",
     highlight: true,
     features: [
@@ -129,17 +137,21 @@ const packageTiers = [
       "Gelişmiş tenant filtreleri ve mailbox senaryoları",
       "Audit log ve ekip aktivite görünürlüğü",
       "Aylık raporlama ve export akışı",
-      "Onboarding ve canlıya geçiş desteği",
+      "Onboarding ve go-live desteği",
     ],
-    cta: "Growth planını planlayalım",
+    cta: "Growth için iletişime geçin",
   },
   {
     name: "Enterprise",
     eyebrow: "Kurumsal",
     audience: "MSP, çok ekipli operasyon ve yüksek ticket hacmiyle çalışan yapılar",
-    capacity: "Yüksek hacim • özel onboarding • çok ekipli operasyon",
     summary: "Yüksek ticket hacmi, çoklu ekip ve yaygın müşteri portföyü için daha kontrollü ve fazlı kurulum modeli.",
-    onboarding: "Özel kurulum planı",
+    includedProducts: [
+      "Yüksek hacimli kurulum",
+      "Çok ekipli operasyon yapısı",
+      "Özel onboarding planı",
+    ],
+    onboarding: "Custom onboarding",
     reporting: "Kurumsal rapor akışı",
     highlight: false,
     features: [
@@ -147,9 +159,9 @@ const packageTiers = [
       "Çoklu kurulum ve geçiş checklist'i",
       "Rol bazlı çalışma modelinin genişletilmesi",
       "Operasyon raporlarının süreçlere yerleştirilmesi",
-      "Uptexx ile canlıya geçiş workshop'u",
+      "Uptexx ile go-live workshop'u",
     ],
-    cta: "Enterprise yapısını konuşalım",
+    cta: "Enterprise için iletişime geçin",
   },
 ];
 
@@ -684,13 +696,20 @@ export default function TicketLandingPage() {
 
                 <p className="mt-4 text-sm leading-7 text-[#607285]">{tier.summary}</p>
 
-                <div className="mt-6 rounded-[20px] border border-[#e1eaf0] bg-[#f8fbfc] p-4">
+                <div className="mt-6 rounded-[22px] border border-[#e1eaf0] bg-[#f8fbfc] p-5">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
-                    Operasyon ölçeği
+                    Pakete dahil ürünler
                   </p>
-                  <p className="mt-2 text-base font-semibold leading-7 text-[#16202a]">
-                    {tier.capacity}
-                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2.5">
+                    {tier.includedProducts.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full border border-[#d8e3ea] bg-white px-3 py-2 text-sm font-medium text-[#16202a]"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 <dl className="mt-6 space-y-4 border-t border-[#e6eef3] pt-6">
@@ -702,7 +721,7 @@ export default function TicketLandingPage() {
                   </div>
                   <div>
                     <dt className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
-                      Canlıya geçiş
+                      Onboarding
                     </dt>
                     <dd className="mt-2 text-sm leading-7 text-[#16202a]">{tier.onboarding}</dd>
                   </div>
@@ -714,24 +733,30 @@ export default function TicketLandingPage() {
                   </div>
                 </dl>
 
-                <div className="mt-6 flex-1 space-y-3 border-t border-[#e6eef3] pt-6">
-                  {tier.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-3 text-sm text-[#425466]">
-                      <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#256985]" />
-                      <span className="leading-6">{feature}</span>
-                    </div>
-                  ))}
+                <div className="mt-6 flex-1 border-t border-[#e6eef3] pt-6">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#607285]">
+                    Öne çıkan yetkinlikler
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    {tier.features.map((feature) => (
+                      <div key={feature} className="flex items-start gap-3 text-sm text-[#425466]">
+                        <CheckCircle2 className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#256985]" />
+                        <span className="leading-6">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <a
                   href="https://www.uptexx.com/iletisim"
-                  className={`mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 ${
+                  className={`mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-[0.95rem] font-semibold shadow-[0_14px_30px_rgba(8,25,47,0.10)] transition hover:-translate-y-0.5 ${
                     tier.highlight
-                      ? "bg-[#256985] text-white hover:bg-[#1d526d]"
-                      : "bg-[#16202a] text-white hover:bg-[#223140]"
+                      ? "bg-[#256985] text-[#f8fbfc] hover:bg-[#1d526d]"
+                      : "bg-[#16202a] text-[#f8fbfc] hover:bg-[#223140]"
                   }`}
                 >
-                  {tier.cta} <ArrowRight className="h-4 w-4" />
+                  <span className="text-[#f8fbfc]">{tier.cta}</span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-[#f8fbfc]" />
                 </a>
               </article>
             ))}
